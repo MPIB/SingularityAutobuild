@@ -2,33 +2,51 @@
 
 This project is developed by using test driven design.
 """
+import logging
 import os
+import sys
 import types
 import unittest
 from unittest.mock import patch
 from subprocess import call
 
+from singularity_builder.__main__ import arg_parser, main
 from singularity_builder.singularity_builder import (
     Builder,
     image_pusher,
     recipe_finder
     )
-from singularity_builder.__main__ import (
-    arg_parser,
-    main
-)
+
+# Logging setup start
+LOGGER = logging.getLogger()
+LOGGER.setLevel(logging.DEBUG)
+
+HANDLER = logging.StreamHandler(sys.stdout)
+HANDLER.setLevel(logging.DEBUG)
+HANDLER.setFormatter(
+    logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    )
+LOGGER.addHandler(HANDLER)
+# Logging setup end
+
+
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 COLLECTION = 'test_recipes'
 CONTAINER = 'recipe_test'
 VERSION = '1.0'
+IMAGE_TYPE = 'simg'
 RECIPE_PATH = '%s/%s/%s.%s.recipe' % (
     MODULE_DIR,
     COLLECTION,
     CONTAINER,
     VERSION
-    )
-IMAGE_PATH = MODULE_DIR+'/test_recipes/recipe_test.simg'
-SEARCH_PATH = MODULE_DIR
+)
+IMAGE_PATH = "%s/%s/%s.%s" % (
+    MODULE_DIR,
+    COLLECTION,
+    CONTAINER,
+    IMAGE_TYPE
+)
 SREGISTRY_STR = ''
 
 class TestSingularityBuilder(unittest.TestCase):
@@ -130,7 +148,7 @@ class TestSingularityBuilder(unittest.TestCase):
 class TestRecipeFinder(unittest.TestCase):
     """ Test the generator that returns directory and file information. """
 
-    RECIPE_PARENT_PARENT = MODULE_DIR
+    RECIPE_PARENTS_PARENT = MODULE_DIR
 
     def test_exceptions(self):
         """ Test if specified exceptions are raised. """
@@ -139,7 +157,7 @@ class TestRecipeFinder(unittest.TestCase):
 
     def test_recipe_finder(self):
         """ Test if recipes can be found and returned as expected. """
-        _finder = recipe_finder(self.RECIPE_PARENT_PARENT)
+        _finder = recipe_finder(self.RECIPE_PARENTS_PARENT)
         self.assertIsInstance(_finder, types.GeneratorType)
         _recipe = next(_finder)
         self.assertEqual(_recipe, RECIPE_PATH)
@@ -155,8 +173,6 @@ class TestImagePusher(unittest.TestCase):
         self.collection = _build_info['collection_name']
         self.version = _build_info['image_version']
         self.image = _build_info['container_name']
-
-
 
     def test_image_pusher(self):
         """ Test the image upload function. """
@@ -179,7 +195,7 @@ class TestImagePusher(unittest.TestCase):
         )
 
     def tearDown(self):
-        print(self.image_path)
+        LOGGER.debug("Deleting remote test image.")
         os.remove(self.image_path)
         call([
             'sregistry',
@@ -192,13 +208,22 @@ class TestMain(unittest.TestCase):
     """ Test the main Function and its helpers """
 
     def setUp(self):
+        LOGGER.debug("Set Up Main Test.")
         if os.path.isfile(IMAGE_PATH):
+            LOGGER.debug("Removing leftover image.")
             os.remove(IMAGE_PATH)
+        self.search_path = MODULE_DIR
 
     def test_main(self):
         """ Test the main function that enables execution from command line. """
+        LOGGER.debug(
+            "Pushing test image %s/%s:%s",
+            COLLECTION,
+            CONTAINER,
+            VERSION
+            )
         main(
-            search_folder=SEARCH_PATH,
+            search_folder=self.search_path,
             image_type='simg', test_run=True
             )
         # Is the test image inside the sregistry?
@@ -212,19 +237,22 @@ class TestMain(unittest.TestCase):
         )
         # Was the local image removed after the push?
         self.assertFalse(os.path.isfile(IMAGE_PATH))
+
+    def tearDown(self):
         # Clean up registry
+        LOGGER.debug("Deleting remote test image.")
         call([
             'sregistry',
             'delete',
             '-f',
             "%s/%s:%s" % (COLLECTION, CONTAINER, VERSION)
-        ])
+            ])
 
     def test_arg_parser(self):
         """ Test the function to parse command line arguments. """
         _image_type = 'simg'
-        _args = ['', "--path", SEARCH_PATH, "--image_type", _image_type]
+        _args = ['', "--path", self.search_path, "--image_type", _image_type]
         with patch('sys.argv', _args):
             _response = arg_parser()
-            self.assertEqual(_response.path, SEARCH_PATH)
+            self.assertEqual(_response.path, self.search_path)
             self.assertEqual(_response.image_type, _image_type)

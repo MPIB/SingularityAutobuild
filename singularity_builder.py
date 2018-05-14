@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """ Go through a directory structure, Build and upload singularity images.
 
 The Functions and classes of this module need to be able to execute
@@ -7,23 +8,16 @@ The .sregistry file needs to enable the user to have admin and superuser access
 to the sregistry-server.
 For further information look at the sregistry clients documentation:
 `sregistry-cli <https://singularityhub.github.io/sregistry/credentials>`_
-
 """
 
-import argparse
 import glob
-import json
 import logging
 import os
 import re
 import subprocess
 from subprocess import call
 import sys
-from typing import Generator, Optional
-
-import git
-import iso8601
-import requests
+from typing import Generator
 
 LOGGER = logging.getLogger()
 LOGGER.setLevel(logging.DEBUG)
@@ -42,7 +36,7 @@ class Builder(object):
     :param image_type:  The image type to be produces. identified by used suffix.
     """
 
-    LOGDIR = os.path.abspath('./build_logs')
+    SUBPROCESS_LOGDIR = os.path.abspath('./build_logs')
 
     def __init__(self, recipe_path: str, image_type: str = 'simg'):
         self.recipe_path = recipe_path
@@ -78,10 +72,10 @@ class Builder(object):
         if self.is_build():
             return _image_info
 
-        if not os.path.exists(self.LOGDIR):
-            os.makedirs(self.LOGDIR)
-        _logpath = "%s/%s.%s.%s.log" % (
-            self.LOGDIR,
+        if not os.path.exists(self.SUBPROCESS_LOGDIR):
+            os.makedirs(self.SUBPROCESS_LOGDIR)
+        _subprocess_logpath = "%s/%s.%s.%s.log" % (
+            self.SUBPROCESS_LOGDIR,
             _image_info['collection_name'],
             _image_info['container_name'],
             _image_info['image_version']
@@ -89,9 +83,9 @@ class Builder(object):
 
         try:
             with open(
-                _logpath,
+                _subprocess_logpath,
                 'w'
-                ) as _logfile:
+                ) as _subprocess_logfile:
                 call(
                     [
                         "singularity",
@@ -99,8 +93,8 @@ class Builder(object):
                         _image_info['image_full_path'],
                         self.recipe_path
                     ],
-                    stdout=_logfile,
-                    stderr=_logfile,
+                    stdout=_subprocess_logfile,
+                    stderr=_subprocess_logfile,
                     shell=False)
             self.build_status = True
         except OSError as error:
@@ -138,189 +132,6 @@ class Builder(object):
         _image_info['image_version'] = self.version
         _image_info['container_name'] = self.image_name
         return _image_info
-
-class GitLabPushEventInfo(object):
-    """ Toolset and object to work with the GitLab API V3
-
-    Methods expect an already parsed API response
-    containing the events of a project.
-    The API used, should deliver a json list, filled with
-    json objects.
-
-    The __init__ takes a parsed Gitlab response and
-    the returned object is able to determine if a given file
-    was modified during the commits of the last push.
-
-    Example API-call that delivers expected response:
-     * :code:`GET {base_url}/api/v3/projects/{project_id}/events`
-
-    :param git_lab_response: A list of gitlab events obtained from a
-                             GitLab v3 API.
-    :param local_repo:       The path to the local git repo to work with.
-    """
-
-    PUSH_DATE_KEY = "created_at"
-
-
-    def __init__(self, git_lab_response: list, local_repo: str):
-        _latest_push = self.get_latest_push(git_lab_response)
-        _from_commit_sha = _latest_push["push_data"]["commit_from"]
-        _to_commit_sha = _latest_push["push_data"]["commit_to"]
-        local_repo = os.path.abspath(local_repo)
-        # Test if Repo actually exists and is a directory
-        if not os.path.isdir(local_repo):
-            if not os.path.exists(local_repo):
-                raise ValueError("%s does not exist." % local_repo)
-            raise ValueError("%s is not a directory." % local_repo)
-        self.repo = git.Repo(path=local_repo)
-        self.from_commit = self.repo.commit(_from_commit_sha)
-        self.to_commit = self.repo.commit(_to_commit_sha)
-        local_repo = os.path.abspath(local_repo)
-        self.changed_files = self.get_changed_files(
-            self.repo,
-            _from_commit_sha,
-            _to_commit_sha
-            )
-        _second_to_last_commits = self.from_commit.parents
-
-
-
-    def is_modified_file(self, file_path: str) -> bool:
-        """ Gives truth value for a files modification status.
-
-        Cross references objects dictionary of files,
-        modified within commits pushed during the latest push,
-        with the input file path.
-
-        :returns: Truth value for for a files modification status.
-        """
-        _is_modified = bool(
-            file_path in [file_path for file_path in self.changed_files]
-            )
-        if _is_modified:
-            _change_type = self.changed_files[file_path]
-            _is_modified = re.findall(r'[AMR].*', _change_type)
-        return _is_modified
-
-    @classmethod
-    def get_changed_files(
-            cls,
-            repo: git.Repo,
-            begin_sha: str,
-            end_sha: str
-        ) -> dict:
-        """ Return the files changed in a range of commits and their change type.
-
-        The dictionary of changed files is supposed to contain all files
-        changed in all commits between begin and end. This includes begin
-        and end commit. To get the files changed in the begin commit a diff
-        between the commit before the begin commit  and the end commit has to be
-        performed.
-
-        :param repo:        Repository object to work with.
-        :param begin_sha:   The hexsha of the first commit of the
-                            intervall. Has to be an earlier
-                            commit than end_sha.
-        :param end_sha:     The hexsha of the last commit of the
-                            intervall. Has to be a later commit than
-                            begin_sha.
-        :returns:           Dictionary with all changed files
-                            as keys and their change type as values.
-        """
-        _changed_files = {}
-        _diff_begin_commit = repo.commit(begin_sha)
-        _diff_end_commit = repo.commit(end_sha)
-
-        if _diff_begin_commit.committed_datetime > _diff_end_commit.committed_datetime:
-            raise ValueError("Begin commit happened before the end commit")
-        # Begin is the first commit
-        if not _diff_begin_commit.parents:
-            # Since its the first commit files can only have been added.
-            for file in _diff_begin_commit:
-                _changed_files[os.path.abspath(file)] = 'A'
-            # git.Commit.parents returns a tuple
-            # so we expect to work with a tuple.
-            _diff_begin_commit = (_diff_begin_commit)
-        else:
-            # Set the beginning to a commit earlier.
-            # (or commits {plural} if original commit is a merge)
-            _diff_begin_commit = _diff_begin_commit.parents
-
-        for commit in _diff_begin_commit:
-            for file in commit.diff(_diff_end_commit):
-                _changed_files[os.path.abspath(file.a_path)] = file.change_type
-
-        return _changed_files
-
-
-
-    @classmethod
-    def get_latest_push(cls, git_lab_response: list) -> Optional[dict]:
-        """ Get the latest push data from a GitLab response.
-
-        Uses extract_push_data to make sure to work only with
-        push data.
-
-        :param git_lab_response: A list of dictionaries.
-                                 The dictionary is expected to conform to
-                                 a GitLab API V3 response containing the
-                                 events of a project.
-        :returns: A dictionary corresponding to the json object
-        """
-        git_lab_response = cls.extract_push_data(git_lab_response)
-        _push_dates = []
-
-        if bool(git_lab_response) is False:
-            return None
-
-        # Extract the dates into a List
-        for push in git_lab_response:
-            _push_dates.append(
-                iso8601.parse_date(
-                    push[cls.PUSH_DATE_KEY]
-                )
-            )
-        # Get latest date.
-        _latest_date = max(_push_dates)
-        # Get latest dates index.
-        _latest_push_index = _push_dates.index(_latest_date)
-
-        # Connect Push event and date with the dates index.
-        return git_lab_response[_latest_push_index]
-
-
-
-    @classmethod
-    def extract_push_data(cls, git_lab_response: list) -> list:
-        """ Filter gitlab response for push events.
-
-        :returns: A list of push event dictionaries.
-        """
-
-        _response_list = []
-
-        # A push event should have the Key push_data
-        # The corresponding value should be a dictionary
-        # The dictionary should have a key called action with
-        # the value pushed.
-        for event in git_lab_response:
-            if "push_data" in event:
-                if event["push_data"]["action"] == "pushed":
-                    _response_list.append(event)
-
-        return _response_list
-
-def gitlab_events_api_request(api_url: str, api_key: str) -> list:
-    """ Call a gitlab API and return its response as list.
-
-    :params api_url: The full url for the api request.
-    :params api_key: The key for the API.
-    :returns:        The API response.
-    """
-    _header = {"PRIVATE-TOKEN": api_key}
-    _response = requests.get(api_url, headers=_header)
-    return json.loads(_response.text)
-
 
 def recipe_finder(path: str = './') -> Generator:
     """ Find recipe files given a root search directory.
@@ -401,93 +212,3 @@ def image_pusher(
         else:
             LOGGER.debug('Upload failed. Retrying')
     return True
-
-def arg_parser() -> argparse.Namespace:
-    """ Reads command line arguments.
-
-    :returns: Values of accepted command line arguments.
-    """
-    _parser = argparse.ArgumentParser(
-        description="""Find all recipes, build them and push all their images to an sregistry.
-        Recipes are identified by the suffix ".recipe".
-        The image name will be taken from the recipe name using everything from the first character till the first "." occurrence.
-        The version will be taken from the recipe name using everything from the first "." till the suffix ".recipe".
-        The collection name will be taken from the recipes parent folder.
-        """
-    )
-    _parser.add_argument('--path', type=str, help="Base path to search recipes.", required=True)
-    _parser.add_argument('--image_type', type=str, help="The type of image to be build")
-    return _parser.parse_args()
-
-def main(
-        search_folder: str = './',
-        image_type: str = 'simg',
-        test_run: bool = False
-    ):
-    """ Function to tie the functionality of this module together.
-
-    :param search_folder: The base folder for :py:func:`.recipe_finder` to search through.
-    :param image_type:    The image type to be passed to :class:`.Builder` constructor
-                          and to be created by :meth:`.Builder.build`.
-    """
-
-    try:
-        _api_url = os.environ['GITLAB_API_STRING']
-        _api_key = os.environ['GITLAB_API_TOKEN']
-    except KeyError:
-        raise EnvironmentError("GitLab API environment variables are not set.")
-    _gitlab_response = gitlab_events_api_request(
-        api_url=_api_url,
-        api_key=_api_key
-        )
-    _file_checker = GitLabPushEventInfo(
-        git_lab_response=_gitlab_response,
-        local_repo=os.path.abspath('./')
-        )
-
-    LOGGER.debug('Building all %s in %s', image_type, search_folder)
-    for recipe_path in recipe_finder(path=search_folder):
-        _builder = Builder(recipe_path=recipe_path, image_type=image_type)
-        _image_info = _builder.image_info()
-        # Was the recipe file modified since last push?
-        if not test_run:
-            if not _file_checker.is_modified_file(recipe_path):
-                LOGGER.debug(
-                    """
-                    Skipping Recipe not modified since last push:
-                    collection: %s
-                    image:      %s
-                    version:    %s""",
-                    _image_info['collection_name'],
-                    _image_info['container_name'],
-                    _image_info['image_version']
-                    )
-                continue
-        _builder = Builder(recipe_path=recipe_path, image_type=image_type)
-        _image_info = _builder.image_info()
-        LOGGER.debug(
-            """
-            Building:
-            collection: %s
-            image:      %s
-            version:    %s""",
-            _image_info['collection_name'],
-            _image_info['container_name'],
-            _image_info['image_version']
-            )
-        _image_info = _builder.build()
-        _pushed = image_pusher(
-            image_path=_image_info['image_full_path'],
-            collection=_image_info['collection_name'],
-            version=_image_info['image_version'],
-            image=_image_info['container_name']
-            )
-        if _pushed:
-            LOGGER.debug('Build and push was successful.')
-
-        os.remove(_image_info['image_full_path'])
-
-
-if __name__ == '__main__':
-    ARGUMENTS = arg_parser()
-    main(search_folder=ARGUMENTS.path, image_type=ARGUMENTS.image_type)

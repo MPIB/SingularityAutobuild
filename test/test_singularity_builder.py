@@ -17,13 +17,18 @@ from singularity_builder.__main__ import (
     arg_parser,
     main
 )
-
+MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 COLLECTION = 'test_recipes'
 CONTAINER = 'recipe_test'
 VERSION = '1.0'
-RECIPE_PATH = os.path.abspath('./test/%s/%s.%s.recipe' % (COLLECTION, CONTAINER, VERSION))
-IMAGE_PATH = os.path.abspath('./test/test_recipes/recipe_test.simg')
-SEARCH_PATH = os.path.abspath('./test')
+RECIPE_PATH = '%s/%s/%s.%s.recipe' % (
+    MODULE_DIR,
+    COLLECTION,
+    CONTAINER,
+    VERSION
+    )
+IMAGE_PATH = MODULE_DIR+'/test_recipes/recipe_test.simg'
+SEARCH_PATH = MODULE_DIR
 SREGISTRY_STR = ''
 
 class TestSingularityBuilder(unittest.TestCase):
@@ -33,7 +38,7 @@ class TestSingularityBuilder(unittest.TestCase):
     ATTRIBUTES['image_name'] = CONTAINER
     ATTRIBUTES['version'] = VERSION
     # The Builder should only work with absolute paths.
-    ATTRIBUTES['build_folder'] = os.path.abspath('./test/test_recipes')
+    ATTRIBUTES['build_folder'] = MODULE_DIR+'/test_recipes'
     ATTRIBUTES['recipe_path'] = "%s/%s.%s.recipe" % (
         ATTRIBUTES['build_folder'],
         ATTRIBUTES['image_name'],
@@ -125,7 +130,7 @@ class TestSingularityBuilder(unittest.TestCase):
 class TestRecipeFinder(unittest.TestCase):
     """ Test the generator that returns directory and file information. """
 
-    RECIPE_PARENT_PARENT = os.path.abspath('./test')
+    RECIPE_PARENT_PARENT = MODULE_DIR
 
     def test_exceptions(self):
         """ Test if specified exceptions are raised. """

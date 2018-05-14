@@ -112,5 +112,6 @@ def main(
 
         os.remove(_image_info['image_full_path'])
 
-ARGUMENTS = arg_parser()
-main(search_folder=ARGUMENTS.path, image_type=ARGUMENTS.image_type)
+if __name__ == "__main__":
+    ARGUMENTS = arg_parser()
+    main(search_folder=ARGUMENTS.path, image_type=ARGUMENTS.image_type)

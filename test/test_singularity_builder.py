@@ -17,6 +17,8 @@ from singularity_builder.singularity_builder import (
     recipe_finder
     )
 
+from singularity_builder.sregistry_tools import image_in_sregistry
+
 # Logging setup start
 LOGGER = logging.getLogger()
 LOGGER.setLevel(logging.DEBUG)
@@ -256,3 +258,53 @@ class TestMain(unittest.TestCase):
             _response = arg_parser()
             self.assertEqual(_response.path, self.search_path)
             self.assertEqual(_response.image_type, _image_type)
+            _response = arg_parser()
+            self.assertEqual(_response.path, self.search_path)
+            self.assertEqual(_response.image_type, _image_type)
+
+class TestImageInSRegistry(unittest.TestCase):
+    """ Test the function to check, if an image already exists in the sregistry. """
+
+    def setUp(self):
+        os.environ['SREGISTRY_CLIENT'] = 'registry'
+        self.builder = Builder(recipe_path=RECIPE_PATH, image_type='simg')
+        _build_info = self.builder.build()
+        self.collection = _build_info
+        self.image_path = _build_info['image_full_path']
+        self.collection = _build_info['collection_name']
+        self.version = _build_info['image_version']
+        self.image = _build_info['container_name']
+
+        image_pusher(
+            image_path=self.image_path,
+            collection=self.collection,
+            version=self.version,
+            image=self.image
+        )
+
+    def test_image_in_sregistry(self):
+        """ Tested function should return correct boolean for image existence. """
+        self.assertTrue(image_in_sregistry(
+            collection=self.collection,
+            version=self.version,
+            image=self.image
+        ))
+
+        call([
+            'sregistry',
+            'delete',
+            '-f',
+            "%s/%s:%s" % (self.collection, self.image, self.version)
+            ])
+
+        self.assertFalse(image_in_sregistry(
+            collection=self.collection,
+            version=self.version,
+            image=self.image
+        ))
+
+
+
+    def tearDown(self):
+        LOGGER.debug("Deleting local test image.")
+        os.remove(self.image_path)

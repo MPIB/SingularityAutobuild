@@ -121,6 +121,15 @@ class Builder(object):
                   Full Path to it, name of its parent folder
                   as collection name, version of the image and
                   name of the container at the destination.
+
+                  .. code-block:: python
+
+                        {
+                            'image_full_path': '/path/to/image.simg',
+                            'collection_name': 'image_parent_folder',
+                            'image_version':   '1.0',
+                            'container_name':  'image_name'
+                        }
         """
 
         _image_info = {}

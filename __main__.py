@@ -17,6 +17,8 @@ from singularity_builder.gitlab_tools import (
     call_gitlab_events_api
 )
 
+from singularity_builder.sregistry_tools import image_in_sregistry
+
 LOGGER = logging.getLogger()
 LOGGER.setLevel(logging.DEBUG)
 
@@ -46,8 +48,7 @@ def arg_parser() -> argparse.Namespace:
 
 def main(
         search_folder: str = './',
-        image_type: str = 'simg',
-        test_run: bool = False
+        image_type: str = 'simg'
     ):
     """ Function to tie the functionality of this module together.
 
@@ -74,8 +75,13 @@ def main(
     for recipe_path in recipe_finder(path=search_folder):
         _builder = Builder(recipe_path=recipe_path, image_type=image_type)
         _image_info = _builder.image_info()
-        # Was the recipe file modified since last push?
-        if not test_run:
+        # Does the image already exist in the sregistry?
+        if image_in_sregistry(
+                collection=_image_info['collection_name'],
+                version=_image_info['image_version'],
+                image=_image_info['container_name']
+        ):
+            # Was the recipe file modified since last push?
             if not _file_checker.is_modified_file(recipe_path):
                 LOGGER.debug(
                     """

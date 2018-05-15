@@ -226,7 +226,7 @@ class TestMain(unittest.TestCase):
             )
         main(
             search_folder=self.search_path,
-            image_type='simg', test_run=True
+            image_type='simg'
             )
         # Is the test image inside the sregistry?
         self.assertNotEqual(

@@ -148,8 +148,16 @@ class Builder(object):
             )
         return self.build_status
 
-    def image_info(self) -> dict:
+    def image_info(self) -> dict(
+            image_full_path='/FULLPATH/TO/image_name.image_type',
+            collection_name='image_parent_folder',
+            image_version='image_version',
+            container_name='image_name'):
         """ Collects data about the image.
+
+        The container_name key returned through the dict is
+        the same as the image name. It is intended to be used to
+        set the container name in the sregistry.
 
         :returns: Information about the build image:
                   Full Path to it, name of its parent folder
@@ -159,9 +167,9 @@ class Builder(object):
                   .. code-block:: python
 
                         {
-                            'image_full_path': '/path/to/image.simg',
+                            'image_full_path': '/FULLPATH/TO/image_name.image_type',
                             'collection_name': 'image_parent_folder',
-                            'image_version':   '1.0',
+                            'image_version':   'image_version',
                             'container_name':  'image_name'
                         }
         """
@@ -178,6 +186,8 @@ class Builder(object):
 
 def recipe_finder(path: str = './') -> Generator:
     """ Find recipe files given a root search directory.
+
+    Recipes need to have the suffix .recipe
 
     :param path: Path of the search root.
                  The path will be made into an
@@ -208,6 +218,9 @@ def image_pusher(
     :param version:          Version of the image.
     :param image:            Name of the image to be used by the sregistry.
     :param retry_threshold:  How often should the upload retried if it fails.
+                             Note: Sregistry showed problems with accepting
+                             post requests. This parameter might become obsolete
+                             when this is no longer an issue.
     :returns:           The success status of the upload.
     """
 

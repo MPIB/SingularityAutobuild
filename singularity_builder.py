@@ -8,6 +8,14 @@ The .sregistry file needs to enable the user to have admin and superuser access
 to the sregistry-server.
 For further information look at the sregistry clients documentation:
 `sregistry-cli <https://singularityhub.github.io/sregistry/credentials>`_
+
+Regular logging in this module is done to stdout,
+to be directly visible in a GitLab CI/CD jobs log.
+Singularity build output is piped into a file in a
+separate folder, created relative to this script.
+The Folder is intended to be defined as a pipeline
+artifact in GitLab CI/CD.
+
 """
 
 import glob
@@ -19,6 +27,7 @@ from subprocess import call
 import sys
 from typing import Generator
 
+# Set up the stdout logger.
 LOGGER = logging.getLogger()
 LOGGER.setLevel(logging.DEBUG)
 
@@ -30,22 +39,49 @@ HANDLER.setFormatter(
 LOGGER.addHandler(HANDLER)
 
 class Builder(object):
-    """Build the actual Singularity image from a recipe.
+    """ Facilitate the building of a Singularity image from a recipe.
+
+    Images are not build automatically to first gather and
+    serve information about the image to be build.
+    Implementations using singularity_builder.Builder
+    can therefore check if the image building would be
+    redundant and skip it if needed.
+
+    Building is done via the Builder.build() method.
 
     :param recipe_path: The full path to the singularity recipe
     :param image_type:  The image type to be produces. identified by used suffix.
     """
 
-    SUBPROCESS_LOGDIR = os.path.abspath('./build_logs')
+    # Directory to create files, to pipe singularity build logs into.
+    SUBPROCESS_LOGDIR = '%s/%s' % (
+        os.path.dirname(os.path.abspath(__file__)),
+        'build_logs'
+        )
 
     def __init__(self, recipe_path: str, image_type: str = 'simg'):
         self.recipe_path = recipe_path
         self.image_type = image_type
         self.build_status = False
         self.build_folder = os.path.dirname(self.recipe_path)
-        self.version = re.sub(r'^.*?\.(.+)\.recipe$', r'\1', self.recipe_path)
-        self.image_name = os.path.basename(self.recipe_path)
-        self.image_name = re.sub(r'(^.*?)\..*$', r'\1', self.image_name)
+        _filename = os.path.basename(self.recipe_path)
+        # Can we find a version part between . characters in the filename?
+        if re.findall(r'\..+?\.', _filename):
+            # Match everything from the first literal . to the last . as Version.
+            self.version = re.sub(r'^.*?\.(.+)\.recipe$', r'\1', _filename)
+        else:
+            # No version in the Filename, use 'latest' as version.
+            self.version = 'latest'
+        # Match everything till the first literal . as the image_name.
+        self.image_name = re.sub(r'(^.*?)\..*$', r'\1', _filename)
+        """
+        Make sure that the subprocess logdir exists.
+        GitLab ci will want the directory to be there,
+        if it was defined as artifact in the pipeline defintion,
+        even if nothing was build.
+        """
+        if not os.path.exists(self.SUBPROCESS_LOGDIR):
+            os.makedirs(self.SUBPROCESS_LOGDIR)
 
     def build(self) -> dict:
         """ Calls singularity to build the image.
@@ -72,8 +108,6 @@ class Builder(object):
         if self.is_build():
             return _image_info
 
-        if not os.path.exists(self.SUBPROCESS_LOGDIR):
-            os.makedirs(self.SUBPROCESS_LOGDIR)
         _subprocess_logpath = "%s/%s.%s.%s.log" % (
             self.SUBPROCESS_LOGDIR,
             _image_info['collection_name'],

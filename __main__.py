@@ -17,7 +17,7 @@ from singularity_builder.gitlab_tools import (
     call_gitlab_events_api
 )
 
-from singularity_builder.sregistry_tools import image_in_sregistry
+from singularity_builder.image_tools import image_in_sregistry
 
 LOGGER = logging.getLogger()
 LOGGER.setLevel(logging.DEBUG)

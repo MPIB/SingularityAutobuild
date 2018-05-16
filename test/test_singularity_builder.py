@@ -257,7 +257,7 @@ class TestMain(unittest.TestCase):
             "%post",
             "exit 1"
         )
-
+        LOGGER.info("Creating faulty test recipe %s.", self.bad_recipe_file_path)
         with open(self.bad_recipe_file_path, 'w') as bad_recipe:
             bad_recipe.write(_bad_recipe_content)
 
@@ -273,7 +273,7 @@ class TestMain(unittest.TestCase):
 
     def tearDown(self):
         # Clean up registry
-        LOGGER.debug("Deleting remote test image.")
+        LOGGER.info("Deleting remote test image.")
         call([
             'sregistry',
             'delete',

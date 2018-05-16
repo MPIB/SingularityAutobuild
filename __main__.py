@@ -81,7 +81,25 @@ def main(
                 version=_image_info['image_version'],
                 image=_image_info['container_name']
         ):
-            # Was the recipe file modified since last push?
+            LOGGER.debug(
+                """
+                Image already in SRegistry:
+                collection: %s
+                image:      %s
+                version:    %s
+                checking if its' recipe has changed.""",
+                _image_info['collection_name'],
+                _image_info['container_name'],
+                _image_info['image_version']
+                )
+            """
+            Was the recipe file modified since last push?
+            This conditional together with the last one
+            is used to skip recipes, whose corresponding
+            image was already build and pushed once.
+            Images whose recipes where changed since
+            the last pushed are however build and reuploaded.
+            """
             if not _file_checker.is_modified_file(recipe_path):
                 LOGGER.debug(
                     """
@@ -93,6 +111,7 @@ def main(
                     _image_info['container_name'],
                     _image_info['image_version']
                     )
+                # Skip build and upload.
                 continue
         _builder = Builder(recipe_path=recipe_path, image_type=image_type)
         _image_info = _builder.image_info()

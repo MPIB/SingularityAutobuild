@@ -37,9 +37,12 @@ COLLECTION = 'test_recipes'
 CONTAINER = 'recipe_test'
 VERSION = '1.0'
 IMAGE_TYPE = 'simg'
-RECIPE_PATH = '%s/%s/%s.%s.recipe' % (
+RECIPE_FOLDER_PATH = '%s/%s' % (
     MODULE_DIR,
     COLLECTION,
+)
+RECIPE_FILE_PATH = '%s/%s.%s.recipe' % (
+    RECIPE_FOLDER_PATH,
     CONTAINER,
     VERSION
 )
@@ -162,14 +165,14 @@ class TestRecipeFinder(unittest.TestCase):
         _finder = recipe_finder(self.RECIPE_PARENTS_PARENT)
         self.assertIsInstance(_finder, types.GeneratorType)
         _recipe = next(_finder)
-        self.assertEqual(_recipe, RECIPE_PATH)
+        self.assertEqual(_recipe, RECIPE_FILE_PATH)
 
 class TestImagePusher(unittest.TestCase):
     """ Test the function to Push an image to an sregistry. """
 
     def setUp(self):
         os.environ['SREGISTRY_CLIENT'] = 'registry'
-        _builder = Builder(recipe_path=RECIPE_PATH, image_type='simg')
+        _builder = Builder(recipe_path=RECIPE_FILE_PATH, image_type='simg')
         _build_info = _builder.build()
         self.image_path = _build_info['image_full_path']
         self.collection = _build_info['collection_name']
@@ -215,6 +218,12 @@ class TestMain(unittest.TestCase):
             LOGGER.debug("Removing leftover image.")
             os.remove(IMAGE_PATH)
         self.search_path = MODULE_DIR
+        self.bad_recipe_file_path = "%s/%s" % (
+            RECIPE_FOLDER_PATH,
+            'bad_recipe.1.0.recipe'
+        )
+        if os.path.isfile(self.bad_recipe_file_path):
+            os.remove(self.bad_recipe_file_path)
 
     def test_main(self):
         """ Test the main function that enables execution from command line. """
@@ -240,6 +249,28 @@ class TestMain(unittest.TestCase):
         # Was the local image removed after the push?
         self.assertFalse(os.path.isfile(IMAGE_PATH))
 
+    def test_bad_recipe(self):
+        """ Test if main can handle a 'bad' recipe file. """
+        _bad_recipe_content = "%s\n%s\n\n%s\n%s" % (
+            "Bootstrap: docker",
+            "FROM: alpine",
+            "%post",
+            "exit 1"
+        )
+
+        with open(self.bad_recipe_file_path, 'w') as bad_recipe:
+            bad_recipe.write(_bad_recipe_content)
+
+        try:
+            main(
+                search_folder=self.search_path,
+                image_type='simg'
+                )
+        except OSError:
+            self.fail("Erroneous recipe caused main() to fail.")
+
+
+
     def tearDown(self):
         # Clean up registry
         LOGGER.debug("Deleting remote test image.")
@@ -249,6 +280,8 @@ class TestMain(unittest.TestCase):
             '-f',
             "%s/%s:%s" % (COLLECTION, CONTAINER, VERSION)
             ])
+        if os.path.isfile(self.bad_recipe_file_path):
+            os.remove(self.bad_recipe_file_path)
 
     def test_arg_parser(self):
         """ Test the function to parse command line arguments. """
@@ -267,7 +300,7 @@ class TestImageInSRegistry(unittest.TestCase):
 
     def setUp(self):
         os.environ['SREGISTRY_CLIENT'] = 'registry'
-        self.builder = Builder(recipe_path=RECIPE_PATH, image_type='simg')
+        self.builder = Builder(recipe_path=RECIPE_FILE_PATH, image_type='simg')
         _build_info = self.builder.build()
         self.collection = _build_info
         self.image_path = _build_info['image_full_path']

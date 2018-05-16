@@ -125,17 +125,24 @@ def main(
             _image_info['container_name'],
             _image_info['image_version']
             )
-        _image_info = _builder.build()
-        _pushed = image_pusher(
-            image_path=_image_info['image_full_path'],
-            collection=_image_info['collection_name'],
-            version=_image_info['image_version'],
-            image=_image_info['container_name']
-            )
-        if _pushed:
-            LOGGER.debug('Build and push was successful.')
+        try:
+            _image_info = _builder.build()
+        except OSError:
+            LOGGER.debug(
+                "File %s could not be build by Singularity.",
+                recipe_path
+                )
+        if _builder.is_build():
+            _pushed = image_pusher(
+                image_path=_image_info['image_full_path'],
+                collection=_image_info['collection_name'],
+                version=_image_info['image_version'],
+                image=_image_info['container_name']
+                )
+            os.remove(_image_info['image_full_path'])
+            if _pushed:
+                LOGGER.debug('Build and push was successful.')
 
-        os.remove(_image_info['image_full_path'])
 
 if __name__ == "__main__":
     ARGUMENTS = arg_parser()

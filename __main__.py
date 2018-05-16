@@ -7,17 +7,16 @@ import os
 import sys
 import logging
 import argparse
-from singularity_builder.singularity_builder import (
-    Builder,
+from singularity_builder.singularity_builder import Builder
+from singularity_builder.image_recipe_tools import (
     recipe_finder,
-    image_pusher
+    image_pusher,
+    image_in_sregistry
 )
 from singularity_builder.gitlab_tools import (
     GitLabPushEventInfo,
     call_gitlab_events_api
 )
-
-from singularity_builder.image_tools import image_in_sregistry
 
 LOGGER = logging.getLogger()
 LOGGER.setLevel(logging.DEBUG)

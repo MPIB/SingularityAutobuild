@@ -116,3 +116,17 @@ def image_pusher(
         else:
             LOGGER.debug('Upload failed. Retrying')
     return True
+    return True
+
+def get_version_from_recipe(recipe_file_name: str) -> str:
+    """ Returns the image version contained in a recipe file name. """
+    # Can we find a version part between . characters in the filename?
+    if re.findall(r'\..+?\.', recipe_file_name):
+        # Match everything from the first literal . to the last . as Version.
+        return re.sub(r'^.*?\.(.+)\.recipe$', r'\1', recipe_file_name)
+    # No version in the Filename, use 'latest' as version.
+    return 'latest'
+
+def get_image_name_from_recipe(recipe_file_name: str) -> str:
+    """ Returns the image name contained in a recipe file name. """
+    return re.sub(r'(^.*?)\..*$', r'\1', recipe_file_name)

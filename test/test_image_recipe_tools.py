@@ -11,6 +11,8 @@ from singularity_builder.singularity_builder import (
     Builder
 )
 from singularity_builder.image_recipe_tools import (
+    get_image_name_from_recipe,
+    get_version_from_recipe,
     image_in_sregistry,
     recipe_finder,
     image_pusher
@@ -126,3 +128,34 @@ class TestImagePusher(unittest.TestCase):
             '-f',
             "%s/%s:%s" % (self.collection, self.image, self.version)
             ])
+
+class TestNameAndVersionFromRecipe(unittest.TestCase):
+    """Test the function to return image version and name given a recipe name."""
+
+    TEST_IMAGE_NAME = 'test_recipe'
+    TEST_RECIPE_NAME = TEST_IMAGE_NAME+'%s.recipe'
+
+    def test_get_version_from_recipe(self):
+        """Test the function to return image version given a recipe name."""
+        _recipe_version = '1.0'
+        _recipe_with_version = self.TEST_RECIPE_NAME % _recipe_version
+        _recipe_latest = self.TEST_RECIPE_NAME % ''
+
+        self.assertEqual(
+            _recipe_version,
+            get_version_from_recipe(recipe_file_name=_recipe_with_version)
+            )
+        self.assertEqual(
+            'latest',
+            get_version_from_recipe(recipe_file_name=_recipe_latest)
+        )
+
+    def test_get_image_name_from_recipe(self):
+        """Test the function to return image name given a recipe name."""
+        _recipe_file_name = self.TEST_RECIPE_NAME % "1.0"
+        _image_name = self.TEST_IMAGE_NAME
+
+        self.assertEqual(
+            _image_name,
+            get_image_name_from_recipe(recipe_file_name=_recipe_file_name)
+            )

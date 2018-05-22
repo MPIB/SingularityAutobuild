@@ -24,6 +24,11 @@ import re
 from subprocess import call
 import sys
 
+from singularity_builder.image_recipe_tools import (
+    get_version_from_recipe,
+    get_image_name_from_recipe
+    )
+
 # Set up the stdout logger.
 LOGGER = logging.getLogger()
 LOGGER.setLevel(logging.DEBUG)
@@ -62,15 +67,9 @@ class Builder(object):
         self.build_status = False
         self.build_folder = os.path.dirname(self.recipe_path)
         _filename = os.path.basename(self.recipe_path)
-        # Can we find a version part between . characters in the filename?
-        if re.findall(r'\..+?\.', _filename):
-            # Match everything from the first literal . to the last . as Version.
-            self.version = re.sub(r'^.*?\.(.+)\.recipe$', r'\1', _filename)
-        else:
-            # No version in the Filename, use 'latest' as version.
-            self.version = 'latest'
+        self.version = get_version_from_recipe
         # Match everything till the first literal . as the image_name.
-        self.image_name = re.sub(r'(^.*?)\..*$', r'\1', _filename)
+        self.image_name = get_image_name_from_recipe
         """
         Make sure that the subprocess logdir exists.
         GitLab ci will want the directory to be there,

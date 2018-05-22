@@ -20,7 +20,6 @@ artifact in GitLab CI/CD.
 
 import logging
 import os
-import re
 from subprocess import call
 import sys
 

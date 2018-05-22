@@ -73,7 +73,7 @@ class TestImageInSRegistry(unittest.TestCase):
 class TestRecipeFinder(unittest.TestCase):
     """ Test the generator that returns directory and file information. """
 
-    RECIPE_PARENTS_PARENT = MODULE_DIR
+    RECIPE_GRANDPARENT_FOLDER = MODULE_DIR
 
     def test_exceptions(self):
         """ Test if specified exceptions are raised. """
@@ -82,7 +82,7 @@ class TestRecipeFinder(unittest.TestCase):
 
     def test_recipe_finder(self):
         """ Test if recipes can be found and returned as expected. """
-        _finder = recipe_finder(self.RECIPE_PARENTS_PARENT)
+        _finder = recipe_finder(self.RECIPE_GRANDPARENT_FOLDER)
         self.assertIsInstance(_finder, types.GeneratorType)
         _recipe = next(_finder)
         self.assertEqual(_recipe, RECIPE_FILE_PATH)

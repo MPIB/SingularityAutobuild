@@ -25,7 +25,8 @@ import sys
 
 from singularity_builder.image_recipe_tools import (
     get_version_from_recipe,
-    get_image_name_from_recipe
+    get_image_name_from_recipe,
+    get_collection_from_recipe_path
     )
 
 # Set up the stdout logger.
@@ -173,8 +174,11 @@ class Builder(object):
         _image_info['image_full_path'] = "%s/%s.%s" % (
             self.build_folder,
             self.image_name,
-            self.image_type)
-        _image_info['collection_name'] = os.path.basename(self.build_folder)
+            self.image_type
+        )
+        _image_info['collection_name'] = get_collection_from_recipe_path(
+            _image_info['image_full_path']
+        )
         _image_info['image_version'] = self.version
         _image_info['container_name'] = self.image_name
         return _image_info

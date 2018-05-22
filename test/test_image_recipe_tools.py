@@ -13,12 +13,14 @@ from singularity_builder.singularity_builder import (
 from singularity_builder.image_recipe_tools import (
     get_image_name_from_recipe,
     get_version_from_recipe,
+    get_collection_from_recipe_path,
     image_in_sregistry,
     recipe_finder,
     image_pusher
 )
 
 RECIPE_FILE_PATH = test_singularity_builder.RECIPE_FILE_PATH
+COLLECTION = test_singularity_builder.COLLECTION
 LOGGER = test_singularity_builder.LOGGER
 MODULE_DIR = test_singularity_builder.MODULE_DIR
 
@@ -129,11 +131,28 @@ class TestImagePusher(unittest.TestCase):
             "%s/%s:%s" % (self.collection, self.image, self.version)
             ])
 
-class TestNameAndVersionFromRecipe(unittest.TestCase):
-    """Test the function to return image version and name given a recipe name."""
+class TestInfoFromRecipe(unittest.TestCase):
+    """Test the functions to return collection, image version and name given a recipe."""
 
     TEST_IMAGE_NAME = 'test_recipe'
     TEST_RECIPE_NAME = TEST_IMAGE_NAME+'%s.recipe'
+
+    def test_get_coll_from_recipe_path(self):
+        """Test the function to return the collection name given a recipes full path."""
+        _test_collection_name = 'collection_test'
+        _test_collection_full_path = '/test/' + _test_collection_name
+        _recipe_file_name = self.TEST_RECIPE_NAME % '1.0'
+        _recipe_path = '%s/%s' % (
+            _test_collection_full_path,
+            _recipe_file_name
+        )
+        self.assertEqual(
+            _test_collection_name,
+            get_collection_from_recipe_path(
+                recipe_file_full_path=_test_collection_full_path
+            )
+        )
+
 
     def test_get_version_from_recipe(self):
         """Test the function to return image version given a recipe name."""

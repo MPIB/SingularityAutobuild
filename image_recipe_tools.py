@@ -117,7 +117,10 @@ def image_pusher(
         else:
             LOGGER.debug('Upload failed. Retrying')
     return True
-    return True
+
+def get_collection_from_recipe_path(recipe_file_full_path: str) -> str:
+    """ Returns the collection of the image to be produced by a recipe file . """
+    return os.path.basename(os.path.dirname(recipe_file_full_path))
 
 def get_version_from_recipe(recipe_file_name: str) -> str:
     """ Returns the image version contained in a recipe file name. """

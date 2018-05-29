@@ -67,9 +67,9 @@ class Builder(object):
         self.build_status = False
         self.build_folder = os.path.dirname(self.recipe_path)
         _filename = os.path.basename(self.recipe_path)
-        self.version = get_version_from_recipe
+        self.version = get_version_from_recipe()
         # Match everything till the first literal . as the image_name.
-        self.image_name = get_image_name_from_recipe
+        self.image_name = get_image_name_from_recipe()
         """
         Make sure that the subprocess logdir exists.
         GitLab ci will want the directory to be there,

@@ -61,6 +61,7 @@ def main(
     try:
         _api_url = os.environ['GITLAB_API_STRING']
         _api_key = os.environ['GITLAB_API_TOKEN']
+        _git_folder = os.environ['CI_PROJECT_DIR']
     except KeyError:
         raise EnvironmentError("GitLab API environment variables are not set.")
     # Call the event API of the GitLab instance used.
@@ -71,7 +72,7 @@ def main(
 
     _file_checker = GitLabPushEventInfo(
         git_lab_response=_gitlab_response,
-        local_repo=os.path.abspath(search_folder)
+        local_repo=os.path.abspath(_git_folder)
         )
 
     _recipe_list = [recipe for recipe in recipe_finder(path=search_folder)]

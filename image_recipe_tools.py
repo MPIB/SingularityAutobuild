@@ -120,7 +120,9 @@ def image_pusher(
 
 def get_collection_from_recipe_path(recipe_file_full_path: str) -> str:
     """ Returns the collection of the image to be produced by a recipe file . """
-    return os.path.basename(os.path.dirname(recipe_file_full_path))
+    _folder_full_path = os.path.dirname(recipe_file_full_path)
+    _out_string = os.path.basename(_folder_full_path)
+    return _out_string
 
 def get_version_from_recipe(recipe_file_name: str) -> str:
     """ Returns the image version contained in a recipe file name. """

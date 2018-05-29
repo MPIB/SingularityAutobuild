@@ -142,13 +142,14 @@ class TestInfoFromRecipe(unittest.TestCase):
     """Test the functions to return collection, image version and name given a recipe."""
 
     TEST_IMAGE_NAME = 'test_recipe'
-    TEST_RECIPE_NAME = TEST_IMAGE_NAME+'%s.recipe'
+    TEST_VERSIONED_RECIPE_NAME = TEST_IMAGE_NAME+'.%s.recipe'
+    TEST_RECIPE_NAME = TEST_IMAGE_NAME+'.recipe'
 
     def test_get_coll_from_recipe_path(self):
         """Test the function to return the collection name given a recipes full path."""
         _test_collection_name = 'collection_test'
         _test_collection_full_path = '/test/' + _test_collection_name
-        _recipe_file_name = self.TEST_RECIPE_NAME % '1.0'
+        _recipe_file_name = self.TEST_VERSIONED_RECIPE_NAME % '1.0'
         _recipe_path = '%s/%s' % (
             _test_collection_full_path,
             _recipe_file_name
@@ -156,7 +157,7 @@ class TestInfoFromRecipe(unittest.TestCase):
         self.assertEqual(
             _test_collection_name,
             get_collection_from_recipe_path(
-                recipe_file_full_path=_test_collection_full_path
+                recipe_file_full_path=_recipe_path
             )
         )
 
@@ -164,8 +165,8 @@ class TestInfoFromRecipe(unittest.TestCase):
     def test_get_version_from_recipe(self):
         """Test the function to return image version given a recipe name."""
         _recipe_version = '1.0'
-        _recipe_with_version = self.TEST_RECIPE_NAME % _recipe_version
-        _recipe_latest = self.TEST_RECIPE_NAME % ''
+        _recipe_with_version = self.TEST_VERSIONED_RECIPE_NAME % (_recipe_version)
+        _recipe_latest = self.TEST_RECIPE_NAME
 
         self.assertEqual(
             _recipe_version,
@@ -178,7 +179,7 @@ class TestInfoFromRecipe(unittest.TestCase):
 
     def test_get_image_name_from_recipe(self):
         """Test the function to return image name given a recipe name."""
-        _recipe_file_name = self.TEST_RECIPE_NAME % "1.0"
+        _recipe_file_name = self.TEST_VERSIONED_RECIPE_NAME % "1.0"
         _image_name = self.TEST_IMAGE_NAME
 
         self.assertEqual(

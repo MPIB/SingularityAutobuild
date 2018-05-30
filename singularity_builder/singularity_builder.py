@@ -18,27 +18,14 @@ artifact in GitLab CI/CD.
 
 """
 
-import logging
 import os
 from subprocess import call
-import sys
 
 from singularity_builder.image_recipe_tools import (
     get_version_from_recipe,
     get_image_name_from_recipe,
     get_collection_from_recipe_path
     )
-
-# Set up the stdout logger.
-LOGGER = logging.getLogger()
-LOGGER.setLevel(logging.DEBUG)
-
-HANDLER = logging.StreamHandler(sys.stdout)
-HANDLER.setLevel(logging.DEBUG)
-HANDLER.setFormatter(
-    logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-    )
-LOGGER.addHandler(HANDLER)
 
 class Builder(object):
     """ Facilitate the building of a Singularity image from a recipe.

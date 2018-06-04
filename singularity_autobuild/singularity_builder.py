@@ -1,27 +1,10 @@
 # -*- coding: utf-8 -*-
-""" Go through a directory structure, Build and upload singularity images.
-
-The Functions and classes of this module need to be able to execute
-`singularity` and `sregistry` from the terminal and
-need to be executed by a user, that has an .sregistry file in the home directory.
-The .sregistry file needs to enable the user to have admin and superuser access
-to the sregistry-server.
-For further information look at the sregistry clients documentation:
-`sregistry-cli <https://singularityhub.github.io/sregistry/credentials>`_
-
-Regular logging in this module is done to stdout,
-to be directly visible in a GitLab CI/CD jobs log.
-Singularity build output is piped into a file in a
-separate folder, created relative to this script.
-The Folder is intended to be defined as a pipeline
-artifact in GitLab CI/CD.
-
-"""
+""" Build singularity images. """
 
 import os
 from subprocess import call
 
-from singularity_builder.image_recipe_tools import (
+from singularity_autobuild.image_recipe_tools import (
     get_version_from_recipe,
     get_image_name_from_recipe,
     get_collection_from_recipe_path
@@ -30,19 +13,22 @@ from singularity_builder.image_recipe_tools import (
 class Builder(object):
     """ Facilitate the building of a Singularity image from a recipe.
 
-    Images are not build automatically to first gather and
-    serve information about the image to be build.
-    Implementations using singularity_builder.Builder
-    can therefore check if the image building would be
-    redundant and skip it if needed.
+    Information about the image to be build is gathered at
+    instantiation, using the passed recipe file path.
 
-    Building is done via the Builder.build() method.
+    Building is done by calling the Builder.build() method.
+    This method calls the singularity installation on the
+    system using the subprocess library.
+
+    Output of the singularity call is piped into a logfile,
+    inside the folder build_logs. build_logs will be created
+    at runtime if it does not exist.
 
     :param recipe_path: The full path to the singularity recipe
     :param image_type:  The image type to be produces. identified by used suffix.
     """
 
-    # Directory to create files, to pipe singularity build logs into.
+    # Directory to create log files, to pipe singularity build output into.
     SUBPROCESS_LOGDIR = '%s/%s' % (
         os.path.dirname(os.path.abspath(__file__)),
         'build_logs'

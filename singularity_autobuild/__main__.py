@@ -1,31 +1,37 @@
 # -*- coding: utf-8 -*-
 """ Main Module to make the builder directly executable through cli.
 
-Contains function arg_parser, parsing command line parameters and
-function main, controlling the applications flow.
 
-:param --path:       Full path to the base folder, containing all recipe files
-                     to be build.
-:param --image_type: Image type, in the form of types suffix,
-                     of the images to be build.
+This __main__ module contains function arg_parser(),
+parsing command line options and
+function main(), controlling the applications flow.
 
+Command line Options are:
+
+
+ --path         Full path to the base folder, containing all recipe files
+                to be build.
+ --image_type   Image type, in the form of types suffix,
+                of the images to be build.
+
+scrolls
 """
 
 import os
 import argparse
-from singularity_builder.singularity_builder import Builder
-from singularity_builder.image_recipe_tools import (
+from singularity_autobuild.singularity_builder import Builder
+from singularity_autobuild.image_recipe_tools import (
     recipe_finder,
     image_pusher,
     image_in_sregistry,
     dependency_resolver
 )
-from singularity_builder.gitlab_tools import (
+from singularity_autobuild.gitlab_tools import (
     GitLabPushEventInfo,
     call_gitlab_events_api
 )
 
-from singularity_builder.stdout_logger import LOGGER
+from singularity_autobuild.stdout_logger import LOGGER
 
 def arg_parser() -> argparse.Namespace:
     """ Reads command line arguments.
@@ -102,14 +108,12 @@ def main(
                 _image_info['container_name'],
                 _image_info['image_version']
                 )
-            """
-            Was the recipe file modified since last push?
-            This conditional together with the last one
-            is used to skip recipes, whose corresponding
-            image was already build and pushed once.
-            Images whose recipes where changed since
-            the last pushed are however build and reuploaded.
-            """
+            # Was the recipe file modified since last push?
+            # This conditional together with the last one
+            # is used to skip recipes, whose corresponding
+            # image was already build and pushed once.
+            # Images whose recipes where changed since
+            # the last pushed are however build and reuploaded.
             if not _file_checker.is_modified_file(recipe_path):
                 LOGGER.info(
                     """
@@ -156,8 +160,8 @@ def main(
                 LOGGER.debug('Build and push was successful.')
 
 
-# Still testing for __name__ == __main__ 
-# to cleanly import this module during unit testing. 
+# Still testing for __name__ == __main__
+# to cleanly import this module during unit testing.
 if __name__ == "__main__":
     ARGUMENTS = arg_parser()
     main(search_folder=ARGUMENTS.path, image_type=ARGUMENTS.image_type)

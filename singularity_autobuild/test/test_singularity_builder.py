@@ -2,31 +2,17 @@
 
 This project is developed by using test driven design.
 """
-import logging
 import os
-import sys
 import unittest
 from unittest.mock import patch
 from subprocess import call
 
-from singularity_builder.__main__ import arg_parser, main
-from singularity_builder.singularity_builder import (
+from singularity_autobuild.test import test_image_recipe_tools 
+from singularity_autobuild.__main__ import arg_parser, main
+from singularity_autobuild.singularity_builder import (
     Builder
     )
-
-
-# Logging setup start
-LOGGER = logging.getLogger()
-LOGGER.setLevel(logging.DEBUG)
-
-HANDLER = logging.StreamHandler(sys.stdout)
-HANDLER.setLevel(logging.DEBUG)
-HANDLER.setFormatter(
-    logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-    )
-LOGGER.addHandler(HANDLER)
-# Logging setup end
-
+from singularity_autobuild.stdout_logger import LOGGER
 
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 COLLECTION = 'test_recipes'
@@ -176,14 +162,13 @@ class TestMain(unittest.TestCase):
             image_type='simg'
             )
         # Is the test image inside the sregistry?
-        self.assertNotEqual(
-            call([
-                'sregistry',
-                'search',
-                "%s/%s:%s" % (COLLECTION, CONTAINER, VERSION)
-                ]),
-            1
-        )
+        # Using functionality from the TestImagePusher class,
+        # since the expected outcome is the same.
+        push_test = test_image_recipe_tools.TestImagePusher(methodName='runTest')
+        push_test.collection = COLLECTION
+        push_test.version = VERSION
+        push_test.image = CONTAINER
+        push_test.test_image_pusher()
         # Was the local image removed after the push?
         self.assertFalse(os.path.isfile(IMAGE_PATH))
 

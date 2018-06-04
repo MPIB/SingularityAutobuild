@@ -1,4 +1,9 @@
-""" Sets up a logger with stdout as target"""
+""" Sets up a shared logger with stdout as target.
+
+Informative logging is done with GitLabs ci pipeline in mind.
+Logging not expected to cause long output is logged to stdout to
+show up inside a pipelines job log.
+"""
 
 import logging
 import sys

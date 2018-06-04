@@ -6,7 +6,7 @@ import re
 import subprocess
 from subprocess import call
 from typing import Generator
-from singularity_builder import stdout_logger
+from singularity_autobuild import stdout_logger
 
 LOGGER = stdout_logger.LOGGER
 
@@ -292,12 +292,13 @@ def dependency_drill_down(
     is incremented by one.
 
     Example:
+
     .. code-block:: python
 
                             {
                                 '/path/to/Parent.recipe': 0,
                                 '/path/to/child.recipe': 1,
-                                '/path/to/child_of_child.recipe': 2,
+                                '/path/to/child_of_child.recipe': 2
                             }
 
     :param dependency_dict: Contains already known dependencies.

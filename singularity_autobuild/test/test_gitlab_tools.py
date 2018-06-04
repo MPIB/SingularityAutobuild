@@ -14,7 +14,7 @@ import git
 import iso8601
 
 
-from singularity_builder.gitlab_tools import (
+from singularity_autobuild.gitlab_tools import (
     GitLabPushEventInfo,
     call_gitlab_events_api
 )

@@ -7,11 +7,11 @@ import os
 import types
 import re
 from subprocess import call
-from singularity_builder.test import test_singularity_builder
-from singularity_builder.singularity_builder import (
+from singularity_autobuild.test import test_singularity_builder
+from singularity_autobuild.singularity_builder import (
     Builder
 )
-from singularity_builder.image_recipe_tools import (
+from singularity_autobuild.image_recipe_tools import (
     get_image_name_from_recipe,
     get_version_from_recipe,
     get_collection_from_recipe_path,

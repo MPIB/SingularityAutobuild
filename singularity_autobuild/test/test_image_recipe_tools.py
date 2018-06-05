@@ -7,10 +7,11 @@ import os
 import types
 import re
 from subprocess import call
-from singularity_autobuild.test import test_singularity_builder
+from singularity_autobuild.autobuild_logger import get_stdout_logger
 from singularity_autobuild.singularity_builder import (
     Builder
 )
+from singularity_autobuild.test.configurator import configure_test_recipe
 from singularity_autobuild.image_recipe_tools import (
     get_image_name_from_recipe,
     get_version_from_recipe,
@@ -26,10 +27,13 @@ from singularity_autobuild.image_recipe_tools import (
     is_own_dependency
 )
 
-RECIPE_FILE_PATH = test_singularity_builder.RECIPE_FILE_PATH
-COLLECTION = test_singularity_builder.COLLECTION
-LOGGER = test_singularity_builder.LOGGER
-MODULE_DIR = test_singularity_builder.MODULE_DIR
+LOGGER = get_stdout_logger()
+
+RECIPE_CONF = configure_test_recipe()['TEST_RECIPE']
+
+RECIPE_FILE_PATH = RECIPE_CONF['recipe_file_path']
+COLLECTION = RECIPE_CONF['collection_name']
+MODULE_DIR = os.path.abspath(os.path.dirname(__file__))
 
 
 class TestImageInSRegistry(unittest.TestCase):

@@ -7,49 +7,33 @@ import unittest
 from unittest.mock import patch
 from subprocess import call
 
-from singularity_autobuild.test import test_image_recipe_tools 
+from singularity_autobuild.test import test_image_recipe_tools
 from singularity_autobuild.__main__ import arg_parser, main
 from singularity_autobuild.singularity_builder import (
     Builder
     )
-from singularity_autobuild.stdout_logger import LOGGER
+from singularity_autobuild.autobuild_logger import get_stdout_logger
+from singularity_autobuild.test.configurator import configure_test_recipe
 
-MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
-COLLECTION = 'test_recipes'
-CONTAINER = 'recipe_test'
-VERSION = '1.0'
-IMAGE_TYPE = 'simg'
-RECIPE_FOLDER_PATH = '%s/%s' % (
-    MODULE_DIR,
-    COLLECTION,
-)
-RECIPE_FILE_PATH = '%s/%s.%s.recipe' % (
-    RECIPE_FOLDER_PATH,
-    CONTAINER,
-    VERSION
-)
-IMAGE_PATH = "%s/%s/%s.%s" % (
-    MODULE_DIR,
-    COLLECTION,
-    CONTAINER,
-    IMAGE_TYPE
-)
+LOGGER = get_stdout_logger()
+
+CONFIG = configure_test_recipe()
+RECIPE_CONF = CONFIG['TEST_RECIPE']
+
+MODULE_DIR = os.path.abspath(os.path.dirname(__file__))
+COLLECTION = RECIPE_CONF['collection_name']
+CONTAINER = RECIPE_CONF['container_name']
+IMAGE = CONTAINER
+VERSION = RECIPE_CONF['version_string']
+IMAGE_TYPE = RECIPE_CONF['image_type']
+RECIPE_FOLDER_PATH = RECIPE_CONF['recipe_folder_path']
+RECIPE_FILE_PATH = RECIPE_CONF['recipe_file_path']
+IMAGE_PATH = RECIPE_CONF['image_path']
 SREGISTRY_STR = ''
 
 class TestSingularityBuilder(unittest.TestCase):
     """Test the script used to build singularity images."""
 
-    ATTRIBUTES = {}
-    ATTRIBUTES['image_name'] = CONTAINER
-    ATTRIBUTES['version'] = VERSION
-    # The Builder should only work with absolute paths.
-    ATTRIBUTES['build_folder'] = MODULE_DIR+'/test_recipes'
-    ATTRIBUTES['recipe_path'] = "%s/%s.%s.recipe" % (
-        ATTRIBUTES['build_folder'],
-        ATTRIBUTES['image_name'],
-        ATTRIBUTES['version']
-        )
-    ATTRIBUTES['image_type'] = 'simg'
 
     def test__init__(self):
         """ Test instantiation of Builder object.
@@ -59,19 +43,27 @@ class TestSingularityBuilder(unittest.TestCase):
         """
 
         # Object should have a default value for image type.
-        _builder = Builder(recipe_path=self.ATTRIBUTES['recipe_path'])
-        self.assertEqual(_builder.image_type, self.ATTRIBUTES['image_type'])
+        _builder = Builder(recipe_path=RECIPE_FILE_PATH)
+        self.assertEqual(_builder.image_type, IMAGE_TYPE)
 
 
         # Test if attributes where created in __init__ and have expected values
         _builder = Builder(
-            recipe_path=self.ATTRIBUTES['recipe_path'],
-            image_type=self.ATTRIBUTES['image_type']
+            recipe_path=RECIPE_FILE_PATH,
+            image_type=IMAGE_TYPE
             )
-        for attribute in self.ATTRIBUTES:
+
+        _expected_attributes = {
+            'recipe_path': RECIPE_FILE_PATH,
+            'image_type': IMAGE_TYPE,
+            'build_folder': RECIPE_FOLDER_PATH,
+            'version': VERSION,
+            'image_name': IMAGE
+        }
+        for attribute in _expected_attributes:
             self.assertEqual(
                 getattr(_builder, attribute),
-                self.ATTRIBUTES[attribute]
+                _expected_attributes[attribute]
                 )
 
     def test__init__exception(self):
@@ -88,8 +80,8 @@ class TestSingularityBuilder(unittest.TestCase):
         """
         # What is the return value of the build function?
         _builder = Builder(
-            recipe_path=self.ATTRIBUTES['recipe_path'],
-            image_type=self.ATTRIBUTES['image_type']
+            recipe_path=RECIPE_FILE_PATH,
+            image_type=VERSION
             )
         _response_keys = ['image_full_path', 'collection_name', 'image_version', 'container_name']
         _builder_response = _builder.build()
@@ -106,9 +98,9 @@ class TestSingularityBuilder(unittest.TestCase):
         # Is the image of the specified type?
         # i.e. does the full path end correctly.
         _image_suffix = _builder_response['image_full_path'][
-            -len(self.ATTRIBUTES['image_type']):]
+            -len(VERSION):]
         self.assertEqual(
-            self.ATTRIBUTES['image_type'],
+            VERSION,
             _image_suffix
             )
         # Clean up
@@ -117,8 +109,8 @@ class TestSingularityBuilder(unittest.TestCase):
     def test_is_build(self):
         """ Test the instance function to check if image already exists. """
         _builder = Builder(
-            recipe_path=self.ATTRIBUTES['recipe_path'],
-            image_type=self.ATTRIBUTES['image_type']
+            recipe_path=RECIPE_FILE_PATH,
+            image_type=VERSION
             )
         # Not Build yet
         self.assertFalse(_builder.is_build())

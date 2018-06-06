@@ -77,7 +77,7 @@ class TestGitLabPushEventInfo(unittest.TestCase):
     BRANCH = 'master'
     NEWEST_PUSH_DATE = "2000-04-11T11:35:15.188Z"
     PUSH_DATE_OBJECT = iso8601.parse_date(NEWEST_PUSH_DATE)
-    GIT_TEST_REPO_PATH = os.path.abspath('test_repo')
+    GIT_TEST_REPO_PATH = os.path.dirname(os.path.realpath(__file__)) + '/test_repo'
 
     FROM_COMMIT_INDEX = 2
     TO_COMMIT_INDEX = 4

@@ -24,6 +24,54 @@ class TestGitLabPushEventInfo(unittest.TestCase):
 
     The GitLabPushEventInfo is specified to work with data from
     the GitLab v3 API.
+
+    The API returns data in json format and can be read into a dict using
+    the json module.
+
+    A mock git repository is created via gitpython in the stUp method.
+
+    A mock GitLab response is created by ingesting data from the mock git
+    repository into template python dictionaries.
+    Filler and expected push dictionaries are then merged in a list.
+    This creates a List, similar to what the standard library json
+    would parse from a GitLab API response string.
+
+    :cvar str BRANCH:                 The branch ingested into the expected_push data.
+                                      Functionality using branch selection is not jet
+                                      implemented.
+
+    :cvar str NEWEST_PUSH_DATE:       Datestring in a format used by the GitLab API.
+                                      Is supposed to be the newest push date, ingested
+                                      into the mock API response.
+
+    :cvar datetime PUSH_DATE_OBJECT:  NEWEST_PUSH_DATE parsed to a date object.
+
+    :cvar str GIT_TEST_REPO_PATH:     Path to the mock git repository to be created.
+
+    :cvar int FROM_COMMIT_INDEX:      List index of the first commit, that is part of the
+                                      newest push from the mock API response.
+
+    :cvar int TO_COMMIT_INDEX:        List index of the last commit, that is part of the
+                                      newest push from the mock API response.
+
+    :cvar list RESPONSE_FILLER:       Mock API Response without the expected_push data.
+
+    :ivar dict expected_push:         Represents a single push event from a GitLab
+                                      API response. It is the reference push event,
+                                      that is expected to be returned as latest
+                                      push event.
+
+    :ivar list all_push_events:       List of all push data sections from the mock
+                                      API response.
+
+    :ivar list git_lab_response:      Mock api response, as expected when the read via
+                                      the json.read() method.
+
+    :ivar dict changed_files:         A dict with all files changed in the most recent push
+                                      as keys and the type of change as their value.
+
+    :ivar git.Repo repo:              A gitpython git.Repo object that handles the
+                                      mock repository.
     """
 
     BRANCH = 'master'

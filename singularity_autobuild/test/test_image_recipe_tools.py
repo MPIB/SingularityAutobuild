@@ -103,6 +103,11 @@ class TestRecipeFinder(unittest.TestCase):
 class TestImagePusher(unittest.TestCase):
     """ Test the function to Push an image to an sregistry. """
 
+    image_path = ''
+    collection = ''
+    version = ''
+    image = ''
+
     def setUp(self):
         os.environ['SREGISTRY_CLIENT'] = 'registry'
         _builder = Builder(recipe_path=RECIPE_FILE_PATH, image_type='simg')

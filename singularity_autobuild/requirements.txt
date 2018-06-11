@@ -1,8 +1,0 @@
-# Needed to work with the repository, that contains the recipes.
-GitPython==2.1.9
-# Used to convert gitlabs date strings into date objects.
-iso8601==0.1.12
-# Needed to get data from the gitlab api.
-requests==2.18.4
-# Needed for python type hints.
-typing==3.6.4

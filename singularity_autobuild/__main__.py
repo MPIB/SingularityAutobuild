@@ -53,7 +53,7 @@ def arg_parser() -> argparse.Namespace:
     return _parser.parse_args()
 
 def main(
-        search_folder: str = './',
+        search_folder: str = None,
         image_type: str = 'simg'
     ):
     """ Function to tie the functionality of this module together.
@@ -64,6 +64,12 @@ def main(
                           constructor and to be created by
                           :meth:`singularity_builder.Builder.build`.
     """
+    if search_folder or image_type is None:
+        _arguments = arg_parser()
+        if search_folder is None:
+            search_folder = _arguments.path
+        if image_type is None:
+            image_type = _arguments.image_type
 
     # Setup for Building
     try:
@@ -165,5 +171,4 @@ def main(
 # Still testing for __name__ == __main__
 # to cleanly import this module during unit testing.
 if __name__ == "__main__":
-    ARGUMENTS = arg_parser()
-    main(search_folder=ARGUMENTS.path, image_type=ARGUMENTS.image_type)
+    main()

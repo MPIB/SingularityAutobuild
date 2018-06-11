@@ -1,3 +1,4 @@
+""" Setup script for the SingularityAutobuild Package."""
 from distutils.core import setup
 
 setup(
@@ -25,7 +26,7 @@ setup(
     ],
     entry_points={
         'console_scripts': [
-            'singularity_autobuild = singularity_autobuild.__main__'
+            'singularity_autobuild = singularity_autobuild.__main__:main'
         ]
     }
 )

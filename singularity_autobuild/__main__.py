@@ -33,7 +33,7 @@ from singularity_autobuild.gitlab_tools import (
 
 from singularity_autobuild.autobuild_logger import get_stdout_logger
 
-LOGGER = get_stdout_logger()
+LOGGER = get_stdout_logger(name='main', level='INFO')
 
 def arg_parser() -> argparse.Namespace:
     """ Reads command line arguments.

@@ -10,19 +10,31 @@ show up inside a pipelines job log.
 import logging
 import sys
 
-def get_stdout_logger() -> logging.Logger:
+def get_stdout_logger(name: str = None, level: str = None) -> logging.Logger:
     """ Sets up logger with a stream handler for stdout.
 
     :returns: A logging.Logger Object with  a handler set
               up to log to stdout.
     """
-    _logger = logging.getLogger()
-    _logger.setLevel(logging.DEBUG)
+    if level == 'INFO':
+        _log_level = logging.INFO
+    elif level == 'ERROR':
+        _log_level = logging.ERROR
+    elif level == 'DEBUG':
+        _log_level = logging.DEBUG
+    else:
+        _log_level = logging.CRITICAL
+
+
+    _logger = logging.getLogger(name=name)
+    _logger.setLevel(_log_level)
 
     _handler = logging.StreamHandler(sys.stdout)
-    _handler.setLevel(logging.DEBUG)
+    _handler.setLevel(_log_level)
     _handler.setFormatter(
-        logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        logging.Formatter(
+            '%(asctime)s - %(name)s - %(levelname)s - %(message)s - %(pathname)s - '
         )
+    )
     _logger.addHandler(_handler)
     return _logger

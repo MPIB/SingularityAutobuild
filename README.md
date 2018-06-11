@@ -1,9 +1,11 @@
-# Singularity Autobuilder
+Singularity Autobuilder
+=======================
 
 This project is intended to automate the building process of a collection of
 Singularity recipes.
 
-## Singularity
+Singularity
+-----------
 
 [Singularity itself must be installed](https://singularity.lbl.gov/install-linux)
 to enable building of singularity images.
@@ -13,7 +15,8 @@ For information about singularity itself visit the
 or the
 [official documentation of singularity](https://singularity.lbl.gov/).
 
-## sregistry
+sregistry
+---------
 
 [sregistry-cli must be installed](https://github.com/singularityhub/sregistry-cli)
 to be able to interact with an sregistry.
@@ -22,7 +25,8 @@ The default behavior for the client is to work with local storage.
 To enable the client to work with an sregistry the environment variable
 `SREGISTRY_CLIENT=registry` must be set.
 
-## sregistry credentials
+sregistry credentials
+---------------------
 
 To authenticate the sregistry-client against an sregistry and to
 set the registries hostname an sregistry secrets file is needed.
@@ -45,14 +49,17 @@ The location can be changed by defining a different path in the
 For further information about the sregisty client see the
 [documentation for the client](https://singularityhub.github.io/sregistry-cli/).
 
-## Installation
+Installation
+------------
 
 TODO
 
-## Testing
+Testing
+-------
 
 TODO
 
-## Full Documentation
+Full Documentation
+------------------
 
 TODO

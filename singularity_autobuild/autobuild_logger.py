@@ -13,8 +13,10 @@ import sys
 def get_stdout_logger(name: str = None, level: str = None) -> logging.Logger:
     """ Sets up logger with a stream handler for stdout.
 
-    :returns: A logging.Logger Object with  a handler set
-              up to log to stdout.
+    :param name:    Name of the logger, to be returned.
+    :param level:   Level of the logger to be returned.
+    :returns:       A logging.Logger Object with  a handler set
+                    up to log to stdout.
     """
     if level == 'INFO':
         _log_level = logging.INFO

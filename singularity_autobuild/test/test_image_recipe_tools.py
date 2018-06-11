@@ -128,13 +128,13 @@ class TestImagePusher(unittest.TestCase):
                 )
         )
         # Does the image exist inside the sregistry?
-        self.assertNotEqual(
+        self.assertEqual(
             call([
                 'sregistry',
                 'search',
                 "%s/%s:%s" % (self.collection, self.image, self.version)
                 ]),
-            1
+            0
         )
 
     def tearDown(self):

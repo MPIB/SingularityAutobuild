@@ -7,7 +7,6 @@ import unittest
 from unittest.mock import patch
 from subprocess import call
 
-from singularity_autobuild.test import test_image_recipe_tools
 from singularity_autobuild.__main__ import arg_parser, main
 from singularity_autobuild.singularity_builder import (
     Builder
@@ -154,13 +153,14 @@ class TestMain(unittest.TestCase):
             image_type='simg'
             )
         # Is the test image inside the sregistry?
-        # Using functionality from the TestImagePusher class,
-        # since the expected outcome is the same.
-        push_test = test_image_recipe_tools.TestImagePusher(methodName='runTest')
-        push_test.collection = COLLECTION
-        push_test.version = VERSION
-        push_test.image = CONTAINER
-        push_test.test_image_pusher()
+        self.assertEqual(
+            call([
+                'sregistry',
+                'search',
+                "%s/%s:%s" % (COLLECTION, CONTAINER, VERSION)
+                ]),
+            0
+        )
         # Was the local image removed after the push?
         self.assertFalse(os.path.isfile(IMAGE_PATH))
 
@@ -187,7 +187,7 @@ class TestMain(unittest.TestCase):
 
 
     def tearDown(self):
-        # Clean up registry
+        # Clean up registry and local
         LOGGER.info("Deleting remote test image.")
         call([
             'sregistry',

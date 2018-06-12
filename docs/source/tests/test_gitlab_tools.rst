@@ -1,5 +1,5 @@
-Unit tests for the Image Recipe Tools module
-============================================
+Unit tests for the Gitlab Tools Module
+======================================
 
-.. automodule:: test_image_recipe_tools
+.. automodule:: test_gitlab_tools
    :members:

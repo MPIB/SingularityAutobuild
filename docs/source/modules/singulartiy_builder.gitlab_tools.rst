@@ -1,5 +1,5 @@
 GitLab Tools
 ===================
 
-.. automodule:: singularity_builder.gitlab_tools
+.. automodule:: singularity_autobuild.gitlab_tools
    :members:

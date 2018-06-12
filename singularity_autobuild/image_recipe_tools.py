@@ -8,7 +8,7 @@ from subprocess import call
 from typing import Generator
 from singularity_autobuild.autobuild_logger import get_stdout_logger
 
-LOGGER = get_stdout_logger()
+LOGGER = get_stdout_logger(name=__name__, level='INFO')
 
 def image_in_sregistry(
         collection: str,

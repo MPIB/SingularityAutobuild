@@ -83,6 +83,7 @@ class TestGitLabPushEventInfo(unittest.TestCase):
     TO_COMMIT_INDEX = 4
 
     # Part of the Response, that should be ignored when selecting the latest push.
+    # i.e. filler data
     RESPONSE_FILLER = [
         {
             "project_id":42,
@@ -106,30 +107,30 @@ class TestGitLabPushEventInfo(unittest.TestCase):
         }
     ]
 
-    expected_push = {
-        "project_id":42,
-        "action_name":"pushed to",
-        "created_at":NEWEST_PUSH_DATE,
-        "author":{},
-        "push_data":{
-            "commit_count":5,
-            "action":"pushed",
-            "ref_type":"branch",
-            "commit_from": "from_commit_dummy",
-            "commit_to": "to_commit_dummy",
-            "ref": BRANCH,
-            "commit_title":"did_something"
-            },
-        "author_username":"test"
-    }
-    all_push_events = []
-    git_lab_response = []
-    changed_files = {}
-    repo = git.Repo()
 
 
     def setUp(self):
         """ Initiate a test git repository. """
+        self.expected_push = {
+            "project_id":42,
+            "action_name":"pushed to",
+            "created_at":self.NEWEST_PUSH_DATE,
+            "author":{},
+            "push_data":{
+                "commit_count":5,
+                "action":"pushed",
+                "ref_type":"branch",
+                "commit_from": "from_commit_dummy", # From commit is here
+                "commit_to": "to_commit_dummy",     # To commit is here
+                "ref": self.BRANCH,
+                "commit_title":"did_something"
+                },
+            "author_username":"test"
+        }
+        self.all_push_events = list
+        self.git_lab_response = list
+        self.changed_files = {}
+        self.repo = None
 
         ## Cleanup beforehand
         if os.path.isdir(self.GIT_TEST_REPO_PATH):

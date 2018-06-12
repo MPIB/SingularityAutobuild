@@ -1,5 +1,5 @@
 Singularity Builder
 ===================
 
-.. automodule:: singularity_builder.singularity_builder
+.. automodule:: singularity_autobuild.singularity_builder
    :members:

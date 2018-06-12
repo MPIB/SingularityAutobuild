@@ -64,11 +64,13 @@ def main(
                           constructor and to be created by
                           :meth:`singularity_builder.Builder.build`.
     """
-    _arguments = arg_parser()
-    if search_folder or image_type is None:
-        if search_folder is None:
-            search_folder = _arguments.path
-        if image_type is None:
+
+
+    if search_folder is None:
+        # Params are not set via call, get command line params
+        _arguments = arg_parser()
+        search_folder = _arguments.path
+        if 'image_type' in _arguments:
             image_type = _arguments.image_type
 
     # Setup for Building

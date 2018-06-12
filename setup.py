@@ -24,7 +24,7 @@ setup(
         'Automatically build a collection of Singularity recipes and'
         'load the build images into your sregistry.'
     ),
-    long_description=open('README.md').read(),
+    long_description=open('README.rst').read(),
     install_requires=[
         # Needed to work with the repository, that contains the recipes.
         "GitPython==2.1.9",

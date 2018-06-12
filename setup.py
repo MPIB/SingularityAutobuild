@@ -1,5 +1,5 @@
 """ Setup script for the SingularityAutobuild Package."""
-from distutils.core import setup
+from setuptools import setup
 
 setup(
     name='SingularityAutobuild',
@@ -7,6 +7,17 @@ setup(
     author='Dominique Hansen',
     author_email='Dominique.Hansen@hu-berlin.de',
     packages=['singularity_autobuild', 'singularity_autobuild.test'],
+    package_data={
+        "singularity_autobuild.test": [
+            'test.cfg',
+            'test_recipes/*.recipe'
+            ]
+    },
+    entry_points={
+        'console_scripts': [
+            'singularity_autobuild = singularity_autobuild.__main__:main'
+        ]
+    },
     url='http://github.com/MPIB/SingularityAutobuild',
     license='3-clause BSD',
     description=(
@@ -23,10 +34,5 @@ setup(
         "requests==2.18.4",
         # Needed for python type hints.
         "typing==3.6.4"
-    ],
-    entry_points={
-        'console_scripts': [
-            'singularity_autobuild = singularity_autobuild.__main__:main'
-        ]
-    }
+    ]
 )

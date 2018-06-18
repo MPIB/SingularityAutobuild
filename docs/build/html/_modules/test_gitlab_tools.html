@@ -1,0 +1,397 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>test_gitlab_tools &#8212; Singularity Images 0.1.0 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="top" title="Singularity Images 0.1.0 documentation" href="../index.html" />
+    <link rel="up" title="Module code" href="index.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for test_gitlab_tools</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Contains unittests for the gitlab_tools module.</span>
+
+<span class="sd">This project is developed by using test driven design.</span>
+<span class="sd">The gitlab_tools module is specified to work with GitLab API v3.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">copy</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">random</span>
+<span class="kn">import</span> <span class="nn">shutil</span>
+<span class="kn">import</span> <span class="nn">unittest</span>
+
+<span class="kn">import</span> <span class="nn">git</span>
+<span class="kn">import</span> <span class="nn">iso8601</span>
+
+
+<span class="kn">from</span> <span class="nn">singularity_autobuild.gitlab_tools</span> <span class="k">import</span> <span class="p">(</span>
+    <span class="n">GitLabPushEventInfo</span><span class="p">,</span>
+    <span class="n">call_gitlab_events_api</span>
+<span class="p">)</span>
+
+<div class="viewcode-block" id="TestGitLabPushEventInfo"><a class="viewcode-back" href="../tests/test_gitlab_tools.html#test_gitlab_tools.TestGitLabPushEventInfo">[docs]</a><span class="k">class</span> <span class="nc">TestGitLabPushEventInfo</span><span class="p">(</span><span class="n">unittest</span><span class="o">.</span><span class="n">TestCase</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Test the the class capable of extracting information from gitlab api data.</span>
+
+<span class="sd">    The GitLabPushEventInfo is specified to work with data from</span>
+<span class="sd">    the GitLab v3 API.</span>
+
+<span class="sd">    The API returns data in json format and can be read into a dict using</span>
+<span class="sd">    the json module.</span>
+
+<span class="sd">    A mock git repository is created via gitpython in the stUp method.</span>
+
+<span class="sd">    A mock GitLab response is created by ingesting data from the mock git</span>
+<span class="sd">    repository into template python dictionaries.</span>
+<span class="sd">    Filler and expected push dictionaries are then merged in a list.</span>
+<span class="sd">    This creates a List, similar to what the standard library json</span>
+<span class="sd">    would parse from a GitLab API response string.</span>
+
+<span class="sd">    :cvar str BRANCH:                 The branch ingested into the expected_push data.</span>
+<span class="sd">                                      Functionality using branch selection is not jet</span>
+<span class="sd">                                      implemented.</span>
+
+<span class="sd">    :cvar str NEWEST_PUSH_DATE:       Datestring in a format used by the GitLab API.</span>
+<span class="sd">                                      Is supposed to be the newest push date, ingested</span>
+<span class="sd">                                      into the mock API response.</span>
+
+<span class="sd">    :cvar datetime PUSH_DATE_OBJECT:  NEWEST_PUSH_DATE parsed to a date object.</span>
+
+<span class="sd">    :cvar str GIT_TEST_REPO_PATH:     Path to the mock git repository to be created.</span>
+
+<span class="sd">    :cvar int FROM_COMMIT_INDEX:      List index of the first commit, that is part of the</span>
+<span class="sd">                                      newest push from the mock API response.</span>
+
+<span class="sd">    :cvar int TO_COMMIT_INDEX:        List index of the last commit, that is part of the</span>
+<span class="sd">                                      newest push from the mock API response.</span>
+
+<span class="sd">    :cvar list RESPONSE_FILLER:       Mock API Response without the expected_push data.</span>
+
+<span class="sd">    :ivar dict expected_push:         Represents a single push event from a GitLab</span>
+<span class="sd">                                      API response. It is the reference push event,</span>
+<span class="sd">                                      that is expected to be returned as latest</span>
+<span class="sd">                                      push event.</span>
+
+<span class="sd">    :ivar list all_push_events:       List of all push data sections from the mock</span>
+<span class="sd">                                      API response.</span>
+
+<span class="sd">    :ivar list git_lab_response:      Mock api response, as expected when the read via</span>
+<span class="sd">                                      the json.read() method.</span>
+
+<span class="sd">    :ivar dict changed_files:         A dict with all files changed in the most recent push</span>
+<span class="sd">                                      as keys and the type of change as their value.</span>
+
+<span class="sd">    :ivar git.Repo repo:              A gitpython git.Repo object that handles the</span>
+<span class="sd">                                      mock repository.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">BRANCH</span> <span class="o">=</span> <span class="s1">&#39;master&#39;</span>
+    <span class="n">NEWEST_PUSH_DATE</span> <span class="o">=</span> <span class="s2">&quot;2000-04-11T11:35:15.188Z&quot;</span>
+    <span class="n">PUSH_DATE_OBJECT</span> <span class="o">=</span> <span class="n">iso8601</span><span class="o">.</span><span class="n">parse_date</span><span class="p">(</span><span class="n">NEWEST_PUSH_DATE</span><span class="p">)</span>
+    <span class="n">GIT_TEST_REPO_PATH</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">realpath</span><span class="p">(</span><span class="vm">__file__</span><span class="p">))</span> <span class="o">+</span> <span class="s1">&#39;/test_repo&#39;</span>
+
+    <span class="n">FROM_COMMIT_INDEX</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="n">TO_COMMIT_INDEX</span> <span class="o">=</span> <span class="mi">4</span>
+
+    <span class="c1"># Part of the Response, that should be ignored when selecting the latest push.</span>
+    <span class="c1"># i.e. filler data</span>
+    <span class="n">RESPONSE_FILLER</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="p">{</span>
+            <span class="s2">&quot;project_id&quot;</span><span class="p">:</span><span class="mi">42</span><span class="p">,</span>
+            <span class="s2">&quot;action_name&quot;</span><span class="p">:</span><span class="s2">&quot;pushed to&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;created_at&quot;</span><span class="p">:</span><span class="s2">&quot;1999-02-11T11:35:15.188Z&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;author&quot;</span><span class="p">:{},</span>
+            <span class="s2">&quot;push_data&quot;</span><span class="p">:{</span>
+                <span class="s2">&quot;commit_count&quot;</span><span class="p">:</span><span class="mi">2</span><span class="p">,</span>
+                <span class="s2">&quot;action&quot;</span><span class="p">:</span><span class="s2">&quot;pushed&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;ref_type&quot;</span><span class="p">:</span><span class="s2">&quot;branch&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;commit_from&quot;</span><span class="p">:</span><span class="s2">&quot;from_commit&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;commit_to&quot;</span><span class="p">:</span><span class="s2">&quot;to_commit&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;ref&quot;</span><span class="p">:</span><span class="s2">&quot;branch_name&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;commit_title&quot;</span><span class="p">:</span><span class="s2">&quot;did_something&quot;</span>
+                <span class="p">},</span>
+            <span class="s2">&quot;author_username&quot;</span><span class="p">:</span><span class="s2">&quot;test&quot;</span>
+        <span class="p">},</span>
+        <span class="p">{</span>
+            <span class="s2">&quot;project_id&quot;</span><span class="p">:</span><span class="s2">&quot;some_id&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;author_username&quot;</span><span class="p">:</span><span class="s2">&quot;test&quot;</span>
+        <span class="p">}</span>
+    <span class="p">]</span>
+
+
+
+<div class="viewcode-block" id="TestGitLabPushEventInfo.setUp"><a class="viewcode-back" href="../tests/test_gitlab_tools.html#test_gitlab_tools.TestGitLabPushEventInfo.setUp">[docs]</a>    <span class="k">def</span> <span class="nf">setUp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Initiate a test git repository. &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">expected_push</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;project_id&quot;</span><span class="p">:</span><span class="mi">42</span><span class="p">,</span>
+            <span class="s2">&quot;action_name&quot;</span><span class="p">:</span><span class="s2">&quot;pushed to&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;created_at&quot;</span><span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">NEWEST_PUSH_DATE</span><span class="p">,</span>
+            <span class="s2">&quot;author&quot;</span><span class="p">:{},</span>
+            <span class="s2">&quot;push_data&quot;</span><span class="p">:{</span>
+                <span class="s2">&quot;commit_count&quot;</span><span class="p">:</span><span class="mi">5</span><span class="p">,</span>
+                <span class="s2">&quot;action&quot;</span><span class="p">:</span><span class="s2">&quot;pushed&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;ref_type&quot;</span><span class="p">:</span><span class="s2">&quot;branch&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;commit_from&quot;</span><span class="p">:</span> <span class="s2">&quot;from_commit_dummy&quot;</span><span class="p">,</span> <span class="c1"># From commit is here</span>
+                <span class="s2">&quot;commit_to&quot;</span><span class="p">:</span> <span class="s2">&quot;to_commit_dummy&quot;</span><span class="p">,</span>     <span class="c1"># To commit is here</span>
+                <span class="s2">&quot;ref&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">BRANCH</span><span class="p">,</span>
+                <span class="s2">&quot;commit_title&quot;</span><span class="p">:</span><span class="s2">&quot;did_something&quot;</span>
+                <span class="p">},</span>
+            <span class="s2">&quot;author_username&quot;</span><span class="p">:</span><span class="s2">&quot;test&quot;</span>
+        <span class="p">}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">all_push_events</span> <span class="o">=</span> <span class="nb">list</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">git_lab_response</span> <span class="o">=</span> <span class="nb">list</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">changed_files</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">repo</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="c1">## Cleanup beforehand</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">GIT_TEST_REPO_PATH</span><span class="p">):</span>
+            <span class="n">shutil</span><span class="o">.</span><span class="n">rmtree</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">GIT_TEST_REPO_PATH</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">GIT_TEST_REPO_PATH</span><span class="p">):</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">GIT_TEST_REPO_PATH</span><span class="p">)</span>
+
+        <span class="c1"># Set up Repo</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">GIT_TEST_REPO_PATH</span><span class="p">)</span>
+        <span class="c1"># odbt is set because default value did not work with create_head</span>
+        <span class="n">_repo</span> <span class="o">=</span> <span class="n">git</span><span class="o">.</span><span class="n">Repo</span><span class="o">.</span><span class="n">init</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">GIT_TEST_REPO_PATH</span><span class="p">,</span> <span class="n">odbt</span><span class="o">=</span><span class="n">git</span><span class="o">.</span><span class="n">GitDB</span><span class="p">)</span>
+
+        <span class="c1"># Create some files and do some commits</span>
+        <span class="n">_file_to_commit</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">commit</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">5</span><span class="p">):</span>
+            <span class="n">_file_to_commit</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">/</span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">GIT_TEST_REPO_PATH</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">commit</span><span class="p">)</span>
+            <span class="p">)</span>
+            <span class="c1"># Create and fill file with some content.</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">_file_to_commit</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">_file</span><span class="p">:</span>
+                <span class="n">_file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span>
+                    <span class="nb">str</span><span class="p">(</span>
+                        <span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1000000000000000000</span><span class="p">)</span>
+                        <span class="p">)</span>
+                    <span class="p">)</span>
+
+            <span class="n">_repo</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">add</span><span class="p">([</span><span class="n">_file_to_commit</span><span class="p">])</span>
+            <span class="n">_repo</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">commit</span><span class="p">(</span><span class="s2">&quot;Made </span><span class="si">%s</span><span class="s2"> commit.&quot;</span> <span class="o">%</span> <span class="n">commit</span><span class="p">)</span>
+
+        <span class="c1"># make a new branch</span>
+        <span class="n">_branch_name</span> <span class="o">=</span> <span class="s1">&#39;test_branch&#39;</span>
+        <span class="n">_master</span> <span class="o">=</span> <span class="n">_repo</span><span class="o">.</span><span class="n">head</span><span class="o">.</span><span class="n">reference</span>
+        <span class="c1"># Create Branch</span>
+        <span class="n">_branch</span> <span class="o">=</span> <span class="n">_repo</span><span class="o">.</span><span class="n">create_head</span><span class="p">(</span><span class="n">_branch_name</span><span class="p">)</span>
+        <span class="c1"># Switch to</span>
+        <span class="n">_repo</span><span class="o">.</span><span class="n">head</span><span class="o">.</span><span class="n">reference</span> <span class="o">=</span> <span class="n">_branch</span>
+        <span class="c1"># Commit to</span>
+        <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">GIT_TEST_REPO_PATH</span> <span class="o">+</span> <span class="s1">&#39;/&#39;</span> <span class="o">+</span> <span class="n">_branch_name</span><span class="p">,</span> <span class="s1">&#39;wb&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="n">_repo</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">add</span><span class="p">([</span><span class="n">_branch_name</span><span class="p">])</span>
+        <span class="n">_repo</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">commit</span><span class="p">(</span><span class="n">_branch_name</span><span class="p">)</span>
+        <span class="c1"># Switch back</span>
+        <span class="n">_repo</span><span class="o">.</span><span class="n">head</span><span class="o">.</span><span class="n">reference</span> <span class="o">=</span> <span class="n">_master</span>
+
+
+        <span class="c1">## Set up the mock GitLab API response to work with.</span>
+        <span class="c1"># Get the hashes of the commits that define content of the mock push.</span>
+        <span class="n">_from_commit</span> <span class="o">=</span> <span class="n">_repo</span><span class="o">.</span><span class="n">head</span><span class="o">.</span><span class="n">log_entry</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">FROM_COMMIT_INDEX</span><span class="p">)</span><span class="o">.</span><span class="n">newhexsha</span>
+        <span class="n">_to_commit</span> <span class="o">=</span> <span class="n">_repo</span><span class="o">.</span><span class="n">head</span><span class="o">.</span><span class="n">log_entry</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">TO_COMMIT_INDEX</span><span class="p">)</span><span class="o">.</span><span class="n">newhexsha</span>
+
+         <span class="c1"># Define the dictionary containing changed filenames</span>
+        <span class="n">_from_commit_objects</span> <span class="o">=</span> <span class="n">_repo</span><span class="o">.</span><span class="n">commit</span><span class="p">(</span><span class="n">_from_commit</span><span class="p">)</span><span class="o">.</span><span class="n">parents</span>
+        <span class="k">for</span> <span class="n">_from_commit_object</span> <span class="ow">in</span> <span class="n">_from_commit_objects</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">_commit_file</span> <span class="ow">in</span> <span class="n">_from_commit_object</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">_repo</span><span class="o">.</span><span class="n">commit</span><span class="p">(</span><span class="n">_to_commit</span><span class="p">)):</span>
+                <span class="n">_filepath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">_commit_file</span><span class="o">.</span><span class="n">a_path</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">changed_files</span><span class="p">[</span><span class="n">_filepath</span><span class="p">]</span> <span class="o">=</span> <span class="n">_commit_file</span><span class="o">.</span><span class="n">change_type</span>
+
+       <span class="c1"># Make a copy of the class constant</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">expected_push</span><span class="p">[</span><span class="s2">&quot;push_data&quot;</span><span class="p">][</span><span class="s2">&quot;commit_from&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">_from_commit</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">expected_push</span><span class="p">[</span><span class="s2">&quot;push_data&quot;</span><span class="p">][</span><span class="s2">&quot;commit_to&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">_to_commit</span>
+
+        <span class="c1"># Make a copy of the class constant</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">git_lab_response</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">RESPONSE_FILLER</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">all_push_events</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">expected_push</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">git_lab_response</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">git_lab_response</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">expected_push</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">repo</span> <span class="o">=</span> <span class="n">_repo</span></div>
+
+<div class="viewcode-block" id="TestGitLabPushEventInfo.test_extract_push_data"><a class="viewcode-back" href="../tests/test_gitlab_tools.html#test_gitlab_tools.TestGitLabPushEventInfo.test_extract_push_data">[docs]</a>    <span class="k">def</span> <span class="nf">test_extract_push_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Test the function to filter out push events from a json file. &quot;&quot;&quot;</span>
+
+        <span class="n">_result_list</span> <span class="o">=</span> <span class="n">GitLabPushEventInfo</span><span class="o">.</span><span class="n">extract_push_data</span><span class="p">(</span>
+            <span class="n">git_lab_response</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">git_lab_response</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Is the result a subset of the expected?</span>
+        <span class="k">for</span> <span class="n">result</span> <span class="ow">in</span> <span class="n">_result_list</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">result</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">all_push_events</span><span class="p">)</span>
+
+        <span class="c1"># Is the expected also subset of the result, i.e. are they the same?</span>
+        <span class="k">for</span> <span class="n">result</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">all_push_events</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">result</span> <span class="ow">in</span> <span class="n">_result_list</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestGitLabPushEventInfo.test_is_modified_file"><a class="viewcode-back" href="../tests/test_gitlab_tools.html#test_gitlab_tools.TestGitLabPushEventInfo.test_is_modified_file">[docs]</a>    <span class="k">def</span> <span class="nf">test_is_modified_file</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Test the function to check if a file was modified since the last push. &quot;&quot;&quot;</span>
+        <span class="c1"># Get full path of all repo files</span>
+        <span class="n">_all_files_set</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">root</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">files</span> <span class="ow">in</span>  <span class="n">os</span><span class="o">.</span><span class="n">walk</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">GIT_TEST_REPO_PATH</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="n">files</span><span class="p">:</span>
+                <span class="n">_all_files_set</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+                    <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+                        <span class="n">root</span><span class="p">,</span> <span class="n">file</span>
+                    <span class="p">))</span>
+                <span class="p">)</span>
+
+        <span class="c1"># Get names of all changed files.</span>
+        <span class="n">_changed_fileset</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span>
+            <span class="p">[</span><span class="n">key</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">changed_files</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="n">_unchanged_fileset</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">_all_files_set</span> <span class="o">-</span> <span class="n">_changed_fileset</span><span class="p">)</span>
+        <span class="n">_object</span> <span class="o">=</span> <span class="n">GitLabPushEventInfo</span><span class="p">(</span>
+            <span class="n">git_lab_response</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">git_lab_response</span><span class="p">,</span>
+            <span class="n">local_repo</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">GIT_TEST_REPO_PATH</span>
+        <span class="p">)</span>
+        <span class="c1"># Test  if all changed files are categorized correctly</span>
+        <span class="k">for</span> <span class="n">_file</span> <span class="ow">in</span> <span class="n">_changed_fileset</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">_object</span><span class="o">.</span><span class="n">is_modified_file</span><span class="p">(</span>
+                <span class="n">file_path</span><span class="o">=</span><span class="n">_file</span>
+            <span class="p">))</span>
+        <span class="c1"># Test  if all unchanged files are categorized correctly</span>
+        <span class="k">for</span> <span class="n">_file</span> <span class="ow">in</span> <span class="n">_unchanged_fileset</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertFalse</span><span class="p">(</span>
+                <span class="n">_object</span><span class="o">.</span><span class="n">is_modified_file</span><span class="p">(</span><span class="n">file_path</span><span class="o">=</span><span class="n">_file</span><span class="p">)</span>
+                <span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestGitLabPushEventInfo.test_get_modified_files"><a class="viewcode-back" href="../tests/test_gitlab_tools.html#test_gitlab_tools.TestGitLabPushEventInfo.test_get_modified_files">[docs]</a>    <span class="k">def</span>  <span class="nf">test_get_modified_files</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Test the function, that returns all modified files between two commits. &quot;&quot;&quot;</span>
+        <span class="n">_expected_filedict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">changed_files</span>
+        <span class="n">_test_filelist</span> <span class="o">=</span> <span class="n">GitLabPushEventInfo</span><span class="o">.</span><span class="n">get_changed_files</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">repo</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">expected_push</span><span class="p">[</span><span class="s2">&quot;push_data&quot;</span><span class="p">][</span><span class="s2">&quot;commit_from&quot;</span><span class="p">],</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">expected_push</span><span class="p">[</span><span class="s2">&quot;push_data&quot;</span><span class="p">][</span><span class="s2">&quot;commit_to&quot;</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">_expected_filedict</span><span class="p">,</span> <span class="n">_test_filelist</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestGitLabPushEventInfo.test_get_latest_push"><a class="viewcode-back" href="../tests/test_gitlab_tools.html#test_gitlab_tools.TestGitLabPushEventInfo.test_get_latest_push">[docs]</a>    <span class="k">def</span> <span class="nf">test_get_latest_push</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Test the function to get last push date.(not the most recent) &quot;&quot;&quot;</span>
+
+        <span class="n">_test_push_date</span> <span class="o">=</span> <span class="n">GitLabPushEventInfo</span><span class="o">.</span><span class="n">get_latest_push</span><span class="p">(</span>
+            <span class="n">git_lab_response</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">all_push_events</span>
+            <span class="p">)</span>
+        <span class="n">_expected_value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">expected_push</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">_test_push_date</span><span class="p">,</span> <span class="n">_expected_value</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestGitLabPushEventInfo.test_instantiation"><a class="viewcode-back" href="../tests/test_gitlab_tools.html#test_gitlab_tools.TestGitLabPushEventInfo.test_instantiation">[docs]</a>    <span class="k">def</span> <span class="nf">test_instantiation</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Test the constructor of the class. &quot;&quot;&quot;</span>
+        <span class="n">_expected_from_commit_sha</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">expected_push</span><span class="p">[</span><span class="s2">&quot;push_data&quot;</span><span class="p">][</span><span class="s2">&quot;commit_from&quot;</span><span class="p">]</span>
+        <span class="n">_expected_to_commit_sha</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">expected_push</span><span class="p">[</span><span class="s2">&quot;push_data&quot;</span><span class="p">][</span><span class="s2">&quot;commit_to&quot;</span><span class="p">]</span>
+        <span class="n">_test_object</span> <span class="o">=</span> <span class="n">GitLabPushEventInfo</span><span class="p">(</span>
+            <span class="n">git_lab_response</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">git_lab_response</span><span class="p">,</span>
+            <span class="n">local_repo</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">GIT_TEST_REPO_PATH</span>
+        <span class="p">)</span>
+        <span class="n">_test_from_commit_sha</span> <span class="o">=</span> <span class="n">_test_object</span><span class="o">.</span><span class="n">from_commit</span><span class="o">.</span><span class="n">hexsha</span>
+        <span class="n">_test_to_commit_sha</span> <span class="o">=</span> <span class="n">_test_object</span><span class="o">.</span><span class="n">to_commit</span><span class="o">.</span><span class="n">hexsha</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">_expected_from_commit_sha</span><span class="p">,</span> <span class="n">_test_from_commit_sha</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">_expected_to_commit_sha</span><span class="p">,</span> <span class="n">_test_to_commit_sha</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestGitLabPushEventInfo.tearDown"><a class="viewcode-back" href="../tests/test_gitlab_tools.html#test_gitlab_tools.TestGitLabPushEventInfo.tearDown">[docs]</a>    <span class="k">def</span> <span class="nf">tearDown</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Clean up test git repo. &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">GIT_TEST_REPO_PATH</span><span class="p">):</span>
+            <span class="n">shutil</span><span class="o">.</span><span class="n">rmtree</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">GIT_TEST_REPO_PATH</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">GIT_TEST_REPO_PATH</span><span class="p">):</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">GIT_TEST_REPO_PATH</span><span class="p">)</span></div></div>
+
+<div class="viewcode-block" id="TestGitlabAPIRequest"><a class="viewcode-back" href="../tests/test_gitlab_tools.html#test_gitlab_tools.TestGitlabAPIRequest">[docs]</a><span class="k">class</span> <span class="nc">TestGitlabAPIRequest</span><span class="p">(</span><span class="n">unittest</span><span class="o">.</span><span class="n">TestCase</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Test the function to call a gitlab API.</span>
+
+<span class="sd">    The Functions tested here are specified to work with</span>
+<span class="sd">    a GitLab API v3.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="TestGitlabAPIRequest.test_gitlab_events_api_request"><a class="viewcode-back" href="../tests/test_gitlab_tools.html#test_gitlab_tools.TestGitlabAPIRequest.test_gitlab_events_api_request">[docs]</a>    <span class="k">def</span> <span class="nf">test_gitlab_events_api_request</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Test the function to call a gitlab API.</span>
+
+<span class="sd">        The API should return a json list filled with objects.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">_api_url</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s1">&#39;GITLAB_API_STRING&#39;</span><span class="p">]</span>
+            <span class="n">_api_key</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s1">&#39;GITLAB_API_TOKEN&#39;</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">EnvironmentError</span><span class="p">(</span><span class="s2">&quot;GitLab API environment variables are not set.&quot;</span><span class="p">)</span>
+        <span class="n">_api_response</span> <span class="o">=</span> <span class="n">call_gitlab_events_api</span><span class="p">(</span><span class="n">api_url</span><span class="o">=</span><span class="n">_api_url</span><span class="p">,</span> <span class="n">api_key</span><span class="o">=</span><span class="n">_api_key</span><span class="p">)</span>
+        <span class="c1"># First level is a list,</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertIsInstance</span><span class="p">(</span><span class="n">_api_response</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span>
+        <span class="c1"># filled with objects</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertIsInstance</span><span class="p">(</span><span class="n">_api_response</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">dict</span><span class="p">)</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, Dominique Hansen.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.9</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.7</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

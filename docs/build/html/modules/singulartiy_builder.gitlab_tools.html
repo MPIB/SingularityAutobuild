@@ -1,0 +1,270 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>GitLab Tools &#8212; Singularity Images 0.1.0 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="top" title="Singularity Images 0.1.0 documentation" href="../index.html" />
+    <link rel="next" title="Image Recipe Tools" href="singulartiy_builder.image_recipe_tools.html" />
+    <link rel="prev" title="Singularity Builder’s __main__" href="singulartiy_builder.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-singularity_autobuild.gitlab_tools">
+<span id="gitlab-tools"></span><h1>GitLab Tools<a class="headerlink" href="#module-singularity_autobuild.gitlab_tools" title="Permalink to this headline">¶</a></h1>
+<p>Tools to work with the Gitlab v3 API.</p>
+<dl class="class">
+<dt id="singularity_autobuild.gitlab_tools.GitLabPushEventInfo">
+<em class="property">class </em><code class="descclassname">singularity_autobuild.gitlab_tools.</code><code class="descname">GitLabPushEventInfo</code><span class="sig-paren">(</span><em>git_lab_response</em>, <em>local_repo</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/singularity_autobuild/gitlab_tools.html#GitLabPushEventInfo"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#singularity_autobuild.gitlab_tools.GitLabPushEventInfo" title="Permalink to this definition">¶</a></dt>
+<dd><p>Toolset and object to work with the GitLab API V3</p>
+<p>Methods expect an already parsed API response
+containing the events of a project.
+The API used, should deliver a json list, filled with
+json objects.</p>
+<p>The __init__ takes a parsed Gitlab response and
+the returned object is able to determine if a given file
+was modified during the commits of the last push.</p>
+<p>The is_modified() method returns True, if the file path,
+given as input, leads to a file, that has been changed.</p>
+<dl class="docutils">
+<dt>Example API-call that delivers expected response:</dt>
+<dd><ul class="first last simple">
+<li><code class="code docutils literal"><span class="pre">GET</span> <span class="pre">{base_url}/api/v3/projects/{project_id}/events</span></code></li>
+</ul>
+</dd>
+</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Variables:</th><td class="field-body"><ul class="first simple">
+<li><strong>PUSH_DATE_KEY</strong> (<em>str</em>) &#8211; Key value of a GitLab API response for the
+creation date of a push.</li>
+<li><strong>repo</strong> (<em>git.Repo</em>) &#8211; A git.Repo used to handle the repository
+containing the recipes.</li>
+<li><strong>from_commit</strong> (<em>git.Commit</em>) &#8211; The first commit of the newest push to
+the GitLab remote repository. Determined through
+the get_latest_push() method
+using the git_lab_api_response response.</li>
+<li><strong>to_commit</strong> (<em>git.Commit</em>) &#8211; The last commit of the newest push to
+the GitLab remote repository. Determined through
+the get_latest_push() method
+using the git_lab_api_response response.</li>
+<li><strong>changed_files</strong> (<em>dict</em>) &#8211; Dictionary with full paths to
+all changed files as keys and their change
+types as values. Determined by the
+get_changed_files() method.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>git_lab_response</strong> (<em>list</em>) &#8211; A list of gitlab events obtained from a
+GitLab v3 API.</li>
+<li><strong>local_repo</strong> (<em>str</em>) &#8211; The path to the local git repo to work with.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="classmethod">
+<dt id="singularity_autobuild.gitlab_tools.GitLabPushEventInfo.extract_push_data">
+<em class="property">classmethod </em><code class="descname">extract_push_data</code><span class="sig-paren">(</span><em>cls</em>, <em>git_lab_response</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/singularity_autobuild/gitlab_tools.html#GitLabPushEventInfo.extract_push_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#singularity_autobuild.gitlab_tools.GitLabPushEventInfo.extract_push_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Filter gitlab response for push events.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><code class="xref py py-class docutils literal"><span class="pre">list</span></code></td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">A list of push event dictionaries.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="singularity_autobuild.gitlab_tools.GitLabPushEventInfo.get_changed_files">
+<em class="property">classmethod </em><code class="descname">get_changed_files</code><span class="sig-paren">(</span><em>cls</em>, <em>repo</em>, <em>begin_sha</em>, <em>end_sha</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/singularity_autobuild/gitlab_tools.html#GitLabPushEventInfo.get_changed_files"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#singularity_autobuild.gitlab_tools.GitLabPushEventInfo.get_changed_files" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the files changed in a range of commits and their change type.</p>
+<p>The dictionary of changed files is supposed to contain all files
+changed in all commits between begin and end. This includes begin
+and end commit. To get the files changed in the begin commit a diff
+between the commit before the begin commit  and the end commit has to be
+performed.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>repo</strong> (<code class="xref py py-class docutils literal"><span class="pre">Repo</span></code>) &#8211; Repository object to work with.</li>
+<li><strong>begin_sha</strong> (<code class="xref py py-class docutils literal"><span class="pre">str</span></code>) &#8211; The hexsha of the first commit of the
+intervall. Has to be an earlier
+commit than end_sha.</li>
+<li><strong>end_sha</strong> (<code class="xref py py-class docutils literal"><span class="pre">str</span></code>) &#8211; The hexsha of the last commit of the
+intervall. Has to be a later commit than
+begin_sha.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><p class="first"><code class="xref py py-class docutils literal"><span class="pre">dict</span></code></p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">Dictionary with all changed files
+as keys and their change type as values.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="singularity_autobuild.gitlab_tools.GitLabPushEventInfo.get_latest_push">
+<em class="property">classmethod </em><code class="descname">get_latest_push</code><span class="sig-paren">(</span><em>cls</em>, <em>git_lab_response</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/singularity_autobuild/gitlab_tools.html#GitLabPushEventInfo.get_latest_push"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#singularity_autobuild.gitlab_tools.GitLabPushEventInfo.get_latest_push" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the latest push data from a GitLab response.</p>
+<p>Uses extract_push_data to make sure to work only with
+push data.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>git_lab_response</strong> (<code class="xref py py-class docutils literal"><span class="pre">list</span></code>) &#8211; A list of dictionaries.
+The dictionary is expected to conform to
+a GitLab API V3 response containing the
+events of a project.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><code class="xref py py-data docutils literal"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal"><span class="pre">dict</span></code>]</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">A dictionary corresponding to the json object</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="singularity_autobuild.gitlab_tools.GitLabPushEventInfo.is_modified_file">
+<code class="descname">is_modified_file</code><span class="sig-paren">(</span><em>file_path</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/singularity_autobuild/gitlab_tools.html#GitLabPushEventInfo.is_modified_file"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#singularity_autobuild.gitlab_tools.GitLabPushEventInfo.is_modified_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gives truth value for a files modification status.</p>
+<p>Cross references objects dictionary of files,
+modified within commits pushed during the latest push,
+with the input file path.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>file_path</strong> (<code class="xref py py-class docutils literal"><span class="pre">str</span></code>) &#8211; Full path to the file, whose modification status
+is to be identified.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><code class="xref py py-class docutils literal"><span class="pre">bool</span></code></td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Truth value for for a files modification status.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="singularity_autobuild.gitlab_tools.call_gitlab_events_api">
+<code class="descclassname">singularity_autobuild.gitlab_tools.</code><code class="descname">call_gitlab_events_api</code><span class="sig-paren">(</span><em>api_url</em>, <em>api_key</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/singularity_autobuild/gitlab_tools.html#call_gitlab_events_api"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#singularity_autobuild.gitlab_tools.call_gitlab_events_api" title="Permalink to this definition">¶</a></dt>
+<dd><p>Call a gitlab API and return its response as list.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Params api_url:</th><td class="field-body">The full url for the api request.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Params api_key:</th><td class="field-body">The key for the API.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><code class="xref py py-class docutils literal"><span class="pre">list</span></code></td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">The API response.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="singulartiy_builder.html" title="previous chapter">Singularity Builder&#8217;s __main__</a></li>
+      <li>Next: <a href="singulartiy_builder.image_recipe_tools.html" title="next chapter">Image Recipe Tools</a></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/modules/singulartiy_builder.gitlab_tools.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, Dominique Hansen.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.9</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.7</a>
+      
+      |
+      <a href="../_sources/modules/singulartiy_builder.gitlab_tools.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

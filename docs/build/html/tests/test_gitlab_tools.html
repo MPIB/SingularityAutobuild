@@ -1,0 +1,209 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Unit tests for the Gitlab Tools Module &#8212; Singularity Images 0.1.0 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="top" title="Singularity Images 0.1.0 documentation" href="../index.html" />
+    <link rel="next" title="Unit Tests for the Image Recipe Tools module." href="test_image_recipe_tools.html" />
+    <link rel="prev" title="Singularity Builder" href="../modules/singulartiy_builder.singulartiy_builder.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-test_gitlab_tools">
+<span id="unit-tests-for-the-gitlab-tools-module"></span><h1>Unit tests for the Gitlab Tools Module<a class="headerlink" href="#module-test_gitlab_tools" title="Permalink to this headline">¶</a></h1>
+<p>Contains unittests for the gitlab_tools module.</p>
+<p>This project is developed by using test driven design.
+The gitlab_tools module is specified to work with GitLab API v3.</p>
+<dl class="class">
+<dt id="test_gitlab_tools.TestGitLabPushEventInfo">
+<em class="property">class </em><code class="descclassname">test_gitlab_tools.</code><code class="descname">TestGitLabPushEventInfo</code><span class="sig-paren">(</span><em>methodName='runTest'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/test_gitlab_tools.html#TestGitLabPushEventInfo"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#test_gitlab_tools.TestGitLabPushEventInfo" title="Permalink to this definition">¶</a></dt>
+<dd><p>Test the the class capable of extracting information from gitlab api data.</p>
+<p>The GitLabPushEventInfo is specified to work with data from
+the GitLab v3 API.</p>
+<p>The API returns data in json format and can be read into a dict using
+the json module.</p>
+<p>A mock git repository is created via gitpython in the stUp method.</p>
+<p>A mock GitLab response is created by ingesting data from the mock git
+repository into template python dictionaries.
+Filler and expected push dictionaries are then merged in a list.
+This creates a List, similar to what the standard library json
+would parse from a GitLab API response string.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Variables:</th><td class="field-body"><ul class="first last simple">
+<li><strong>BRANCH</strong> (<em>str</em>) &#8211; The branch ingested into the expected_push data.
+Functionality using branch selection is not jet
+implemented.</li>
+<li><strong>NEWEST_PUSH_DATE</strong> (<em>str</em>) &#8211; Datestring in a format used by the GitLab API.
+Is supposed to be the newest push date, ingested
+into the mock API response.</li>
+<li><strong>PUSH_DATE_OBJECT</strong> (<em>datetime</em>) &#8211; NEWEST_PUSH_DATE parsed to a date object.</li>
+<li><strong>GIT_TEST_REPO_PATH</strong> (<em>str</em>) &#8211; Path to the mock git repository to be created.</li>
+<li><strong>FROM_COMMIT_INDEX</strong> (<em>int</em>) &#8211; List index of the first commit, that is part of the
+newest push from the mock API response.</li>
+<li><strong>TO_COMMIT_INDEX</strong> (<em>int</em>) &#8211; List index of the last commit, that is part of the
+newest push from the mock API response.</li>
+<li><strong>RESPONSE_FILLER</strong> (<em>list</em>) &#8211; Mock API Response without the expected_push data.</li>
+<li><strong>expected_push</strong> (<em>dict</em>) &#8211; Represents a single push event from a GitLab
+API response. It is the reference push event,
+that is expected to be returned as latest
+push event.</li>
+<li><strong>all_push_events</strong> (<em>list</em>) &#8211; List of all push data sections from the mock
+API response.</li>
+<li><strong>git_lab_response</strong> (<em>list</em>) &#8211; Mock api response, as expected when the read via
+the json.read() method.</li>
+<li><strong>changed_files</strong> (<em>dict</em>) &#8211; A dict with all files changed in the most recent push
+as keys and the type of change as their value.</li>
+<li><strong>repo</strong> (<em>git.Repo</em>) &#8211; A gitpython git.Repo object that handles the
+mock repository.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="test_gitlab_tools.TestGitLabPushEventInfo.setUp">
+<code class="descname">setUp</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/test_gitlab_tools.html#TestGitLabPushEventInfo.setUp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#test_gitlab_tools.TestGitLabPushEventInfo.setUp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initiate a test git repository.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="test_gitlab_tools.TestGitLabPushEventInfo.tearDown">
+<code class="descname">tearDown</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/test_gitlab_tools.html#TestGitLabPushEventInfo.tearDown"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#test_gitlab_tools.TestGitLabPushEventInfo.tearDown" title="Permalink to this definition">¶</a></dt>
+<dd><p>Clean up test git repo.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="test_gitlab_tools.TestGitLabPushEventInfo.test_extract_push_data">
+<code class="descname">test_extract_push_data</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/test_gitlab_tools.html#TestGitLabPushEventInfo.test_extract_push_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#test_gitlab_tools.TestGitLabPushEventInfo.test_extract_push_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Test the function to filter out push events from a json file.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="test_gitlab_tools.TestGitLabPushEventInfo.test_get_latest_push">
+<code class="descname">test_get_latest_push</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/test_gitlab_tools.html#TestGitLabPushEventInfo.test_get_latest_push"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#test_gitlab_tools.TestGitLabPushEventInfo.test_get_latest_push" title="Permalink to this definition">¶</a></dt>
+<dd><p>Test the function to get last push date.(not the most recent)</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="test_gitlab_tools.TestGitLabPushEventInfo.test_get_modified_files">
+<code class="descname">test_get_modified_files</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/test_gitlab_tools.html#TestGitLabPushEventInfo.test_get_modified_files"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#test_gitlab_tools.TestGitLabPushEventInfo.test_get_modified_files" title="Permalink to this definition">¶</a></dt>
+<dd><p>Test the function, that returns all modified files between two commits.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="test_gitlab_tools.TestGitLabPushEventInfo.test_instantiation">
+<code class="descname">test_instantiation</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/test_gitlab_tools.html#TestGitLabPushEventInfo.test_instantiation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#test_gitlab_tools.TestGitLabPushEventInfo.test_instantiation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Test the constructor of the class.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="test_gitlab_tools.TestGitLabPushEventInfo.test_is_modified_file">
+<code class="descname">test_is_modified_file</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/test_gitlab_tools.html#TestGitLabPushEventInfo.test_is_modified_file"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#test_gitlab_tools.TestGitLabPushEventInfo.test_is_modified_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Test the function to check if a file was modified since the last push.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="test_gitlab_tools.TestGitlabAPIRequest">
+<em class="property">class </em><code class="descclassname">test_gitlab_tools.</code><code class="descname">TestGitlabAPIRequest</code><span class="sig-paren">(</span><em>methodName='runTest'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/test_gitlab_tools.html#TestGitlabAPIRequest"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#test_gitlab_tools.TestGitlabAPIRequest" title="Permalink to this definition">¶</a></dt>
+<dd><p>Test the function to call a gitlab API.</p>
+<p>The Functions tested here are specified to work with
+a GitLab API v3.</p>
+<dl class="method">
+<dt id="test_gitlab_tools.TestGitlabAPIRequest.test_gitlab_events_api_request">
+<code class="descname">test_gitlab_events_api_request</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/test_gitlab_tools.html#TestGitlabAPIRequest.test_gitlab_events_api_request"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#test_gitlab_tools.TestGitlabAPIRequest.test_gitlab_events_api_request" title="Permalink to this definition">¶</a></dt>
+<dd><p>Test the function to call a gitlab API.</p>
+<p>The API should return a json list filled with objects.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="../modules/singulartiy_builder.singulartiy_builder.html" title="previous chapter">Singularity Builder</a></li>
+      <li>Next: <a href="test_image_recipe_tools.html" title="next chapter">Unit Tests for the Image Recipe Tools module.</a></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/tests/test_gitlab_tools.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, Dominique Hansen.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.9</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.7</a>
+      
+      |
+      <a href="../_sources/tests/test_gitlab_tools.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

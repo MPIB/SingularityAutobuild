@@ -1,0 +1,207 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Unit Tests for the Image Recipe Tools module. &#8212; Singularity Images 0.1.0 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="top" title="Singularity Images 0.1.0 documentation" href="../index.html" />
+    <link rel="next" title="Unit Tests for Singularity Builder Class" href="test_singulartiy_builder.html" />
+    <link rel="prev" title="Unit tests for the Gitlab Tools Module" href="test_gitlab_tools.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-test_image_recipe_tools">
+<span id="unit-tests-for-the-image-recipe-tools-module"></span><h1>Unit Tests for the Image Recipe Tools module.<a class="headerlink" href="#module-test_image_recipe_tools" title="Permalink to this headline">¶</a></h1>
+<p>Test the functions that work with recipes and images.</p>
+<dl class="class">
+<dt id="test_image_recipe_tools.TestDependencyResolver">
+<em class="property">class </em><code class="descclassname">test_image_recipe_tools.</code><code class="descname">TestDependencyResolver</code><span class="sig-paren">(</span><em>methodName='runTest'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/test_image_recipe_tools.html#TestDependencyResolver"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#test_image_recipe_tools.TestDependencyResolver" title="Permalink to this definition">¶</a></dt>
+<dd><p>Test the function, that sorts a list of recipe files on their dependencies.</p>
+<dl class="method">
+<dt id="test_image_recipe_tools.TestDependencyResolver.test_dependency_drill_down">
+<code class="descname">test_dependency_drill_down</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/test_image_recipe_tools.html#TestDependencyResolver.test_dependency_drill_down"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#test_image_recipe_tools.TestDependencyResolver.test_dependency_drill_down" title="Permalink to this definition">¶</a></dt>
+<dd><p>Test the function that follows a single dependency chain.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="test_image_recipe_tools.TestDependencyResolver.test_dependency_resolver">
+<code class="descname">test_dependency_resolver</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/test_image_recipe_tools.html#TestDependencyResolver.test_dependency_resolver"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#test_image_recipe_tools.TestDependencyResolver.test_dependency_resolver" title="Permalink to this definition">¶</a></dt>
+<dd><p>Test the function that orders a list on recipe dependencies.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="test_image_recipe_tools.TestDependencyResolver.test_get_dependency_from_recipe">
+<code class="descname">test_get_dependency_from_recipe</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/test_image_recipe_tools.html#TestDependencyResolver.test_get_dependency_from_recipe"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#test_image_recipe_tools.TestDependencyResolver.test_get_dependency_from_recipe" title="Permalink to this definition">¶</a></dt>
+<dd><p>Test the function, that reads the dependency from a recipes header.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="test_image_recipe_tools.TestDependencyResolver.test_get_path_from_dependency">
+<code class="descname">test_get_path_from_dependency</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/test_image_recipe_tools.html#TestDependencyResolver.test_get_path_from_dependency"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#test_image_recipe_tools.TestDependencyResolver.test_get_path_from_dependency" title="Permalink to this definition">¶</a></dt>
+<dd><p>Test the function to get the recipe path from a dependency.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="test_image_recipe_tools.TestDependencyResolver.test_is_own_dependency">
+<code class="descname">test_is_own_dependency</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/test_image_recipe_tools.html#TestDependencyResolver.test_is_own_dependency"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#test_image_recipe_tools.TestDependencyResolver.test_is_own_dependency" title="Permalink to this definition">¶</a></dt>
+<dd><p>Test the function that checks if dependency is to a private sregistry.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="test_image_recipe_tools.TestDependencyResolver.test_recipe_list_sanity_check">
+<code class="descname">test_recipe_list_sanity_check</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/test_image_recipe_tools.html#TestDependencyResolver.test_recipe_list_sanity_check"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#test_image_recipe_tools.TestDependencyResolver.test_recipe_list_sanity_check" title="Permalink to this definition">¶</a></dt>
+<dd><p>Test the function that finds recipes that would create images with the same name.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="test_image_recipe_tools.TestImageInSRegistry">
+<em class="property">class </em><code class="descclassname">test_image_recipe_tools.</code><code class="descname">TestImageInSRegistry</code><span class="sig-paren">(</span><em>methodName='runTest'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/test_image_recipe_tools.html#TestImageInSRegistry"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#test_image_recipe_tools.TestImageInSRegistry" title="Permalink to this definition">¶</a></dt>
+<dd><p>Test the function to check, if an image already exists in the sregistry.</p>
+<dl class="method">
+<dt id="test_image_recipe_tools.TestImageInSRegistry.test_image_in_sregistry">
+<code class="descname">test_image_in_sregistry</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/test_image_recipe_tools.html#TestImageInSRegistry.test_image_in_sregistry"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#test_image_recipe_tools.TestImageInSRegistry.test_image_in_sregistry" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tested function should return correct boolean for image existence.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="test_image_recipe_tools.TestImagePusher">
+<em class="property">class </em><code class="descclassname">test_image_recipe_tools.</code><code class="descname">TestImagePusher</code><span class="sig-paren">(</span><em>methodName='runTest'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/test_image_recipe_tools.html#TestImagePusher"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#test_image_recipe_tools.TestImagePusher" title="Permalink to this definition">¶</a></dt>
+<dd><p>Test the function to Push an image to an sregistry.</p>
+<dl class="method">
+<dt id="test_image_recipe_tools.TestImagePusher.test_image_pusher">
+<code class="descname">test_image_pusher</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/test_image_recipe_tools.html#TestImagePusher.test_image_pusher"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#test_image_recipe_tools.TestImagePusher.test_image_pusher" title="Permalink to this definition">¶</a></dt>
+<dd><p>Test the image upload function.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="test_image_recipe_tools.TestInfoFromRecipe">
+<em class="property">class </em><code class="descclassname">test_image_recipe_tools.</code><code class="descname">TestInfoFromRecipe</code><span class="sig-paren">(</span><em>methodName='runTest'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/test_image_recipe_tools.html#TestInfoFromRecipe"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#test_image_recipe_tools.TestInfoFromRecipe" title="Permalink to this definition">¶</a></dt>
+<dd><p>Test the functions to return collection, image version and name given a recipe.</p>
+<dl class="method">
+<dt id="test_image_recipe_tools.TestInfoFromRecipe.test_get_coll_from_recipe_path">
+<code class="descname">test_get_coll_from_recipe_path</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/test_image_recipe_tools.html#TestInfoFromRecipe.test_get_coll_from_recipe_path"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#test_image_recipe_tools.TestInfoFromRecipe.test_get_coll_from_recipe_path" title="Permalink to this definition">¶</a></dt>
+<dd><p>Test the function to return the collection name given a recipes full path.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="test_image_recipe_tools.TestInfoFromRecipe.test_get_image_name_from_recipe">
+<code class="descname">test_get_image_name_from_recipe</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/test_image_recipe_tools.html#TestInfoFromRecipe.test_get_image_name_from_recipe"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#test_image_recipe_tools.TestInfoFromRecipe.test_get_image_name_from_recipe" title="Permalink to this definition">¶</a></dt>
+<dd><p>Test the function to return image name given a recipe name.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="test_image_recipe_tools.TestInfoFromRecipe.test_get_version_from_recipe">
+<code class="descname">test_get_version_from_recipe</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/test_image_recipe_tools.html#TestInfoFromRecipe.test_get_version_from_recipe"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#test_image_recipe_tools.TestInfoFromRecipe.test_get_version_from_recipe" title="Permalink to this definition">¶</a></dt>
+<dd><p>Test the function to return image version given a recipe name.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="test_image_recipe_tools.TestRecipeFinder">
+<em class="property">class </em><code class="descclassname">test_image_recipe_tools.</code><code class="descname">TestRecipeFinder</code><span class="sig-paren">(</span><em>methodName='runTest'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/test_image_recipe_tools.html#TestRecipeFinder"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#test_image_recipe_tools.TestRecipeFinder" title="Permalink to this definition">¶</a></dt>
+<dd><p>Test the generator that returns directory and file information.</p>
+<dl class="method">
+<dt id="test_image_recipe_tools.TestRecipeFinder.test_exceptions">
+<code class="descname">test_exceptions</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/test_image_recipe_tools.html#TestRecipeFinder.test_exceptions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#test_image_recipe_tools.TestRecipeFinder.test_exceptions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Test if specified exceptions are raised.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="test_image_recipe_tools.TestRecipeFinder.test_recipe_finder">
+<code class="descname">test_recipe_finder</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/test_image_recipe_tools.html#TestRecipeFinder.test_recipe_finder"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#test_image_recipe_tools.TestRecipeFinder.test_recipe_finder" title="Permalink to this definition">¶</a></dt>
+<dd><p>Test if recipes can be found and returned as expected.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="test_gitlab_tools.html" title="previous chapter">Unit tests for the Gitlab Tools Module</a></li>
+      <li>Next: <a href="test_singulartiy_builder.html" title="next chapter">Unit Tests for Singularity Builder Class</a></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/tests/test_image_recipe_tools.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, Dominique Hansen.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.9</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.7</a>
+      
+      |
+      <a href="../_sources/tests/test_image_recipe_tools.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

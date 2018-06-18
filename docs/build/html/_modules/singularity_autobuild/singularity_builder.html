@@ -1,0 +1,242 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>singularity_autobuild.singularity_builder &#8212; Singularity Images 0.1.0 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="top" title="Singularity Images 0.1.0 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for singularity_autobuild.singularity_builder</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot; Build singularity images. &quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">from</span> <span class="nn">subprocess</span> <span class="k">import</span> <span class="n">call</span>
+
+<span class="kn">from</span> <span class="nn">singularity_autobuild.image_recipe_tools</span> <span class="k">import</span> <span class="p">(</span>
+    <span class="n">get_version_from_recipe</span><span class="p">,</span>
+    <span class="n">get_image_name_from_recipe</span><span class="p">,</span>
+    <span class="n">get_collection_from_recipe_path</span>
+    <span class="p">)</span>
+
+<div class="viewcode-block" id="Builder"><a class="viewcode-back" href="../../modules/singulartiy_builder.singulartiy_builder.html#singularity_autobuild.singularity_builder.Builder">[docs]</a><span class="k">class</span> <span class="nc">Builder</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Facilitate the building of a Singularity image from a recipe.</span>
+
+<span class="sd">    Information about the image to be build is gathered at</span>
+<span class="sd">    instantiation, using the passed recipe file path.</span>
+
+<span class="sd">    Building is done by calling the Builder.build() method.</span>
+<span class="sd">    This method calls the singularity installation on the</span>
+<span class="sd">    system using the subprocess library.</span>
+
+<span class="sd">    Output of the singularity call is piped into a logfile,</span>
+<span class="sd">    inside the folder build_logs. build_logs will be created</span>
+<span class="sd">    at runtime if it does not exist.</span>
+
+<span class="sd">    :param recipe_path: The full path to the singularity recipe</span>
+<span class="sd">    :param image_type:  The image type to be produces. identified by used suffix.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Directory to create log files, to pipe singularity build output into.</span>
+    <span class="n">SUBPROCESS_LOGDIR</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">%s</span><span class="s1">/</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)),</span>
+        <span class="s1">&#39;build_logs&#39;</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">recipe_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">image_type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;simg&#39;</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">recipe_path</span> <span class="o">=</span> <span class="n">recipe_path</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">image_type</span> <span class="o">=</span> <span class="n">image_type</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">build_status</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">build_folder</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">recipe_path</span><span class="p">)</span>
+        <span class="n">_filename</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">recipe_path</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">version</span> <span class="o">=</span> <span class="n">get_version_from_recipe</span><span class="p">(</span><span class="n">recipe_file_name</span><span class="o">=</span><span class="n">_filename</span><span class="p">)</span>
+        <span class="c1"># Match everything till the first literal . as the image_name.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">image_name</span> <span class="o">=</span> <span class="n">get_image_name_from_recipe</span><span class="p">(</span><span class="n">recipe_file_name</span><span class="o">=</span><span class="n">_filename</span><span class="p">)</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Make sure that the subprocess logdir exists.</span>
+<span class="sd">        GitLab ci will want the directory to be there,</span>
+<span class="sd">        if it was defined as artifact in the pipeline defintion,</span>
+<span class="sd">        even if nothing was build.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">SUBPROCESS_LOGDIR</span><span class="p">):</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">SUBPROCESS_LOGDIR</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Builder.build"><a class="viewcode-back" href="../../modules/singulartiy_builder.singulartiy_builder.html#singularity_autobuild.singularity_builder.Builder.build">[docs]</a>    <span class="k">def</span> <span class="nf">build</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot; Calls singularity to build the image.</span>
+
+<span class="sd">        :returns: Information about the build image:</span>
+<span class="sd">                  Full Path to it, name of its parent folder</span>
+<span class="sd">                  as collection name, version of the image and</span>
+<span class="sd">                  name of the container at the destination:</span>
+
+<span class="sd">                  .. code-block:: python</span>
+
+<span class="sd">                        {</span>
+<span class="sd">                            &#39;image_full_path&#39;: &#39;/path/to/image.simg&#39;,</span>
+<span class="sd">                            &#39;collection_name&#39;: &#39;image_parent_folder&#39;,</span>
+<span class="sd">                            &#39;image_version&#39;:   &#39;1.0&#39;,</span>
+<span class="sd">                            &#39;container_name&#39;:  &#39;image_name&#39;</span>
+<span class="sd">                        }</span>
+
+<span class="sd">        :raises OSError: When Singularity could not be found/executed.</span>
+<span class="sd">        :raises AttributeError: When Singularity failed with its given parameters.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">_image_info</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">image_info</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_build</span><span class="p">():</span>
+            <span class="k">return</span> <span class="n">_image_info</span>
+
+        <span class="n">_subprocess_logpath</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">/</span><span class="si">%s</span><span class="s2">.</span><span class="si">%s</span><span class="s2">.</span><span class="si">%s</span><span class="s2">.log&quot;</span> <span class="o">%</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">SUBPROCESS_LOGDIR</span><span class="p">,</span>
+            <span class="n">_image_info</span><span class="p">[</span><span class="s1">&#39;collection_name&#39;</span><span class="p">],</span>
+            <span class="n">_image_info</span><span class="p">[</span><span class="s1">&#39;container_name&#39;</span><span class="p">],</span>
+            <span class="n">_image_info</span><span class="p">[</span><span class="s1">&#39;image_version&#39;</span><span class="p">]</span>
+            <span class="p">)</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span>
+                <span class="n">_subprocess_logpath</span><span class="p">,</span>
+                <span class="s1">&#39;w&#39;</span>
+                <span class="p">)</span> <span class="k">as</span> <span class="n">_subprocess_logfile</span><span class="p">:</span>
+                <span class="n">call</span><span class="p">(</span>
+                    <span class="p">[</span>
+                        <span class="s2">&quot;singularity&quot;</span><span class="p">,</span>
+                        <span class="s2">&quot;build&quot;</span><span class="p">,</span>
+                        <span class="n">_image_info</span><span class="p">[</span><span class="s1">&#39;image_full_path&#39;</span><span class="p">],</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">recipe_path</span>
+                    <span class="p">],</span>
+                    <span class="n">stdout</span><span class="o">=</span><span class="n">_subprocess_logfile</span><span class="p">,</span>
+                    <span class="n">stderr</span><span class="o">=</span><span class="n">_subprocess_logfile</span><span class="p">,</span>
+                    <span class="n">shell</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">build_status</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">except</span> <span class="ne">OSError</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">OSError</span><span class="p">(</span><span class="s2">&quot;singularity build failed with </span><span class="si">%s</span><span class="s2">.&quot;</span> <span class="o">%</span> <span class="n">error</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">_image_info</span></div>
+
+<div class="viewcode-block" id="Builder.is_build"><a class="viewcode-back" href="../../modules/singulartiy_builder.singulartiy_builder.html#singularity_autobuild.singularity_builder.Builder.is_build">[docs]</a>    <span class="k">def</span> <span class="nf">is_build</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot; Checks, updates and returns current build status of the image.</span>
+
+<span class="sd">        :returns: Build status of the image.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">build_status</span><span class="p">:</span>
+            <span class="n">_info</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">image_info</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">build_status</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span>
+                <span class="n">_info</span><span class="p">[</span><span class="s1">&#39;image_full_path&#39;</span><span class="p">]</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">build_status</span></div>
+
+<div class="viewcode-block" id="Builder.image_info"><a class="viewcode-back" href="../../modules/singulartiy_builder.singulartiy_builder.html#singularity_autobuild.singularity_builder.Builder.image_info">[docs]</a>    <span class="k">def</span> <span class="nf">image_info</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">(</span>
+            <span class="n">image_full_path</span><span class="o">=</span><span class="s1">&#39;/FULLPATH/TO/image_name.image_type&#39;</span><span class="p">,</span>
+            <span class="n">collection_name</span><span class="o">=</span><span class="s1">&#39;image_parent_folder&#39;</span><span class="p">,</span>
+            <span class="n">image_version</span><span class="o">=</span><span class="s1">&#39;image_version&#39;</span><span class="p">,</span>
+            <span class="n">container_name</span><span class="o">=</span><span class="s1">&#39;image_name&#39;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Collects data about the image.</span>
+
+<span class="sd">        The container_name key returned through the dict is</span>
+<span class="sd">        the same as the image name. It is intended to be used to</span>
+<span class="sd">        set the container name in the sregistry.</span>
+
+<span class="sd">        :returns: Information about the build image:</span>
+<span class="sd">                  Full Path to it, name of its parent folder</span>
+<span class="sd">                  as collection name, version of the image and</span>
+<span class="sd">                  name of the container at the destination.</span>
+
+<span class="sd">                  .. code-block:: python</span>
+
+<span class="sd">                        {</span>
+<span class="sd">                            &#39;image_full_path&#39;: &#39;/FULLPATH/TO/image_name.image_type&#39;,</span>
+<span class="sd">                            &#39;collection_name&#39;: &#39;image_parent_folder&#39;,</span>
+<span class="sd">                            &#39;image_version&#39;:   &#39;image_version&#39;,</span>
+<span class="sd">                            &#39;container_name&#39;:  &#39;image_name&#39;</span>
+<span class="sd">                        }</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">_image_info</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">_image_info</span><span class="p">[</span><span class="s1">&#39;image_full_path&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">/</span><span class="si">%s</span><span class="s2">.</span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">build_folder</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">image_name</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">image_type</span>
+        <span class="p">)</span>
+        <span class="n">_image_info</span><span class="p">[</span><span class="s1">&#39;collection_name&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">get_collection_from_recipe_path</span><span class="p">(</span>
+            <span class="n">_image_info</span><span class="p">[</span><span class="s1">&#39;image_full_path&#39;</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="n">_image_info</span><span class="p">[</span><span class="s1">&#39;image_version&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">version</span>
+        <span class="n">_image_info</span><span class="p">[</span><span class="s1">&#39;container_name&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">image_name</span>
+        <span class="k">return</span> <span class="n">_image_info</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, Dominique Hansen.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.9</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.7</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

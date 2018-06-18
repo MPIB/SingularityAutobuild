@@ -1,0 +1,377 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Image Recipe Tools &#8212; Singularity Images 0.1.0 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="top" title="Singularity Images 0.1.0 documentation" href="../index.html" />
+    <link rel="next" title="Singularity Builder" href="singulartiy_builder.singulartiy_builder.html" />
+    <link rel="prev" title="GitLab Tools" href="singulartiy_builder.gitlab_tools.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-singularity_autobuild.image_recipe_tools">
+<span id="image-recipe-tools"></span><h1>Image Recipe Tools<a class="headerlink" href="#module-singularity_autobuild.image_recipe_tools" title="Permalink to this headline">¶</a></h1>
+<p>Module for miscellaneous modules to work with sregistry.</p>
+<dl class="function">
+<dt id="singularity_autobuild.image_recipe_tools.dependency_drill_down">
+<code class="descclassname">singularity_autobuild.image_recipe_tools.</code><code class="descname">dependency_drill_down</code><span class="sig-paren">(</span><em>dependency_dict</em>, <em>recipe_path</em>, <em>recipe_base_path</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/singularity_autobuild/image_recipe_tools.html#dependency_drill_down"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#singularity_autobuild.image_recipe_tools.dependency_drill_down" title="Permalink to this definition">¶</a></dt>
+<dd><p>Recursively drills down a dependency chain.</p>
+<p>The dependency dict is passed as reference through all recursive functions calls.
+It functions as a cache for already known results and as the expected result.
+It is however not returned.</p>
+<p>Sets a dependency as 0, if it does not depend on container from
+the private sregistry. If a child of a recipe is found, this number
+is incremented by one.</p>
+<p>Example:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="p">{</span>
+    <span class="s1">&#39;/path/to/Parent.recipe&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+    <span class="s1">&#39;/path/to/child.recipe&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="s1">&#39;/path/to/child_of_child.recipe&#39;</span><span class="p">:</span> <span class="mi">2</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>dependency_dict</strong> (<code class="xref py py-class docutils literal"><span class="pre">dict</span></code>) &#8211; Contains already known dependencies.
+The dictionary is directly modified
+and only passed as reference not as copy.
+It functions both as a cache and as the final
+result of the function.</li>
+<li><strong>child_key</strong> &#8211; Path to the recipe whose dependency
+is calculated.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">None</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="singularity_autobuild.image_recipe_tools.dependency_resolver">
+<code class="descclassname">singularity_autobuild.image_recipe_tools.</code><code class="descname">dependency_resolver</code><span class="sig-paren">(</span><em>recipe_file_paths</em>, <em>recipe_base_path</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/singularity_autobuild/image_recipe_tools.html#dependency_resolver"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#singularity_autobuild.image_recipe_tools.dependency_resolver" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sorts a list of recipe file paths based on their base image dependency.</p>
+<p>Sorts the list in a way, that all recipes with dependencies linking
+outside the local storage are sorted to the beginning.
+All other recipes that follow those recipes are sorted, that
+recipe with a child dependency, is always sorted behind its parent
+in the list.</p>
+<p>Since a recipe can only depend on one base image, it is sufficient,
+that this base image is in front of the child image during the building
+process.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>recipe_file_paths</strong> (<code class="xref py py-class docutils literal"><span class="pre">list</span></code>) &#8211; List of paths to recipe files.</li>
+<li><strong>recipe_base_path</strong> (<code class="xref py py-class docutils literal"><span class="pre">str</span></code>) &#8211; Path to the base folder containing all recipe files.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><p class="first"><code class="xref py py-class docutils literal"><span class="pre">list</span></code></p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">List of recipe paths sorted by their dependency.
+With Parents sorted before their children.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="singularity_autobuild.image_recipe_tools.get_collection_from_recipe_path">
+<code class="descclassname">singularity_autobuild.image_recipe_tools.</code><code class="descname">get_collection_from_recipe_path</code><span class="sig-paren">(</span><em>recipe_file_full_path</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/singularity_autobuild/image_recipe_tools.html#get_collection_from_recipe_path"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#singularity_autobuild.image_recipe_tools.get_collection_from_recipe_path" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the collection of the image to be produced by a recipe file .</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><code class="xref py py-class docutils literal"><span class="pre">str</span></code></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="singularity_autobuild.image_recipe_tools.get_dependency_from_recipe">
+<code class="descclassname">singularity_autobuild.image_recipe_tools.</code><code class="descname">get_dependency_from_recipe</code><span class="sig-paren">(</span><em>recipe_file_full_path</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/singularity_autobuild/image_recipe_tools.html#get_dependency_from_recipe"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#singularity_autobuild.image_recipe_tools.get_dependency_from_recipe" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reads a recipe file and returns its Bootstrap and From values.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><code class="xref py py-class docutils literal"><span class="pre">dict</span></code></td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">A dict with a key equal to the recipes Bootstrap method and
+the value of this key being the value of its From value.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Raises:</th><td class="field-body">UserWarning</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="singularity_autobuild.image_recipe_tools.get_image_name_from_recipe">
+<code class="descclassname">singularity_autobuild.image_recipe_tools.</code><code class="descname">get_image_name_from_recipe</code><span class="sig-paren">(</span><em>recipe_file_name</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/singularity_autobuild/image_recipe_tools.html#get_image_name_from_recipe"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#singularity_autobuild.image_recipe_tools.get_image_name_from_recipe" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the image name contained in a recipe file name.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><code class="xref py py-class docutils literal"><span class="pre">str</span></code></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="singularity_autobuild.image_recipe_tools.get_path_from_dependency">
+<code class="descclassname">singularity_autobuild.image_recipe_tools.</code><code class="descname">get_path_from_dependency</code><span class="sig-paren">(</span><em>recipe_dependency_value</em>, <em>recipe_base_folder_path</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/singularity_autobuild/image_recipe_tools.html#get_path_from_dependency"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#singularity_autobuild.image_recipe_tools.get_path_from_dependency" title="Permalink to this definition">¶</a></dt>
+<dd><p>Searches the base folder for a file, that corresponse to the dependency passed.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>recipe_dependency_value</strong> (<code class="xref py py-class docutils literal"><span class="pre">str</span></code>) &#8211; Value of the &#8220;From:&#8221; section from a
+recipe file, used by singularity
+to find the base image.</li>
+<li><strong>recipe_base_folder_path</strong> (<code class="xref py py-class docutils literal"><span class="pre">str</span></code>) &#8211; Full path of the base folder,
+containing all recipes.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><p class="first"><code class="xref py py-class docutils literal"><span class="pre">str</span></code></p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">Full path to the parent recipe or
+an empty string &#8216;&#8217; if it is not a local
+dependency.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="singularity_autobuild.image_recipe_tools.get_version_from_recipe">
+<code class="descclassname">singularity_autobuild.image_recipe_tools.</code><code class="descname">get_version_from_recipe</code><span class="sig-paren">(</span><em>recipe_file_name</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/singularity_autobuild/image_recipe_tools.html#get_version_from_recipe"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#singularity_autobuild.image_recipe_tools.get_version_from_recipe" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the image version contained in a recipe file name.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><code class="xref py py-class docutils literal"><span class="pre">str</span></code></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="singularity_autobuild.image_recipe_tools.image_in_sregistry">
+<code class="descclassname">singularity_autobuild.image_recipe_tools.</code><code class="descname">image_in_sregistry</code><span class="sig-paren">(</span><em>collection</em>, <em>version</em>, <em>image</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/singularity_autobuild/image_recipe_tools.html#image_in_sregistry"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#singularity_autobuild.image_recipe_tools.image_in_sregistry" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns true if image of version exists in collection.</p>
+<p>Calls sregistry search and parses its output to
+determin if a specific container is already stored
+in the sregistry.
+:type collection: <code class="xref py py-class docutils literal"><span class="pre">str</span></code>
+:param collection: The name of the images/containers collection.
+:type version: <code class="xref py py-class docutils literal"><span class="pre">str</span></code>
+:param version:    The version of the container.
+:type image: <code class="xref py py-class docutils literal"><span class="pre">str</span></code>
+:param image:      The name of the container.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><code class="xref py py-class docutils literal"><span class="pre">bool</span></code></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="singularity_autobuild.image_recipe_tools.image_pusher">
+<code class="descclassname">singularity_autobuild.image_recipe_tools.</code><code class="descname">image_pusher</code><span class="sig-paren">(</span><em>image_path</em>, <em>collection</em>, <em>version</em>, <em>image</em>, <em>retry_threshold=20</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/singularity_autobuild/image_recipe_tools.html#image_pusher"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#singularity_autobuild.image_recipe_tools.image_pusher" title="Permalink to this definition">¶</a></dt>
+<dd><p>Upload image to an sregistry.</p>
+<p>Calls <cite>sregistry push</cite> with <cite>subprocess.Popen</cite> to upload an existing image to an sregistry.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>image_path</strong> (<code class="xref py py-class docutils literal"><span class="pre">str</span></code>) &#8211; Path to the image file</li>
+<li><strong>collection</strong> (<code class="xref py py-class docutils literal"><span class="pre">str</span></code>) &#8211; Name of the collection to upload to.</li>
+<li><strong>version</strong> (<code class="xref py py-class docutils literal"><span class="pre">str</span></code>) &#8211; Version of the image.</li>
+<li><strong>image</strong> (<code class="xref py py-class docutils literal"><span class="pre">str</span></code>) &#8211; Name of the image to be used by the sregistry.</li>
+<li><strong>retry_threshold</strong> (<code class="xref py py-class docutils literal"><span class="pre">int</span></code>) &#8211; How often should the upload retried if it fails.
+Note: Sregistry showed problems with accepting
+post requests. This parameter might become obsolete
+when this is no longer an issue.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><p class="first"><code class="xref py py-class docutils literal"><span class="pre">bool</span></code></p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">The success status of the upload.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="singularity_autobuild.image_recipe_tools.is_own_dependency">
+<code class="descclassname">singularity_autobuild.image_recipe_tools.</code><code class="descname">is_own_dependency</code><span class="sig-paren">(</span><em>recipe_dependency_value</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/singularity_autobuild/image_recipe_tools.html#is_own_dependency"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#singularity_autobuild.image_recipe_tools.is_own_dependency" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns True if the dependency links to the sregistry used to push images to.</p>
+<p>Needs the env variable SREGISTRY_HOSTNAME to be set.
+This variable is also needed for the .sregistry file setup.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>recipe_dependency_value</strong> (<code class="xref py py-class docutils literal"><span class="pre">str</span></code>) &#8211; Value from a recipes &#8220;From:&#8221; section declaring the base Image.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><code class="xref py py-class docutils literal"><span class="pre">bool</span></code></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="singularity_autobuild.image_recipe_tools.recipe_finder">
+<code class="descclassname">singularity_autobuild.image_recipe_tools.</code><code class="descname">recipe_finder</code><span class="sig-paren">(</span><em>path='./'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/singularity_autobuild/image_recipe_tools.html#recipe_finder"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#singularity_autobuild.image_recipe_tools.recipe_finder" title="Permalink to this definition">¶</a></dt>
+<dd><p>Find recipe files given a root search directory.</p>
+<p>Recipes need to have the suffix .recipe</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>path</strong> (<code class="xref py py-class docutils literal"><span class="pre">str</span></code>) &#8211; Path of the search root.
+The path will be made into an
+absolute path if it is relative.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><code class="xref py py-class docutils literal"><span class="pre">Generator</span></code>[+T_co, -T_contra, +V_co]</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">The absolute paths to
+found recipes.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="singularity_autobuild.image_recipe_tools.recipe_list_sanity_check">
+<code class="descclassname">singularity_autobuild.image_recipe_tools.</code><code class="descname">recipe_list_sanity_check</code><span class="sig-paren">(</span><em>recipe_file_paths</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/singularity_autobuild/image_recipe_tools.html#recipe_list_sanity_check"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#singularity_autobuild.image_recipe_tools.recipe_list_sanity_check" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks a list of recipe file paths for recipes creating duplicates.</p>
+<p>Raises an exception if at least two recipes are found in the passed list,
+that would be uploaded to the same collection, with the same name, and the same
+version.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>recipe_file_paths</strong> (<code class="xref py py-class docutils literal"><span class="pre">list</span></code>) &#8211; A list of full paths to recipe files.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body">RuntimeError</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">None</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="singulartiy_builder.gitlab_tools.html" title="previous chapter">GitLab Tools</a></li>
+      <li>Next: <a href="singulartiy_builder.singulartiy_builder.html" title="next chapter">Singularity Builder</a></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/modules/singulartiy_builder.image_recipe_tools.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, Dominique Hansen.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.9</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.7</a>
+      
+      |
+      <a href="../_sources/modules/singulartiy_builder.image_recipe_tools.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

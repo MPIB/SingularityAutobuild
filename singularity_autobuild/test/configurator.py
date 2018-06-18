@@ -3,7 +3,6 @@
 import os
 import configparser
 
-# TODO change all occurences of this kind
 TEST_BASE_PATH = os.path.abspath(os.path.dirname(__file__))
 
 def configure_test_recipe(conf_file: str = TEST_BASE_PATH+'/test.cfg') -> configparser.ConfigParser:

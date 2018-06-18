@@ -1,0 +1,460 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>test_image_recipe_tools &#8212; Singularity Images 0.1.0 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="top" title="Singularity Images 0.1.0 documentation" href="../index.html" />
+    <link rel="up" title="Module code" href="index.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Singularity Images 0.1.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">Module code</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for test_image_recipe_tools</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot; Test the functions that work with recipes and images.</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">unittest</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">types</span>
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">from</span> <span class="nn">subprocess</span> <span class="k">import</span> <span class="n">call</span>
+<span class="kn">from</span> <span class="nn">singularity_autobuild.autobuild_logger</span> <span class="k">import</span> <span class="n">get_stdout_logger</span>
+<span class="kn">from</span> <span class="nn">singularity_autobuild.singularity_builder</span> <span class="k">import</span> <span class="p">(</span>
+    <span class="n">Builder</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">singularity_autobuild.test.configurator</span> <span class="k">import</span> <span class="n">configure_test_recipe</span>
+<span class="kn">from</span> <span class="nn">singularity_autobuild.image_recipe_tools</span> <span class="k">import</span> <span class="p">(</span>
+    <span class="n">get_image_name_from_recipe</span><span class="p">,</span>
+    <span class="n">get_version_from_recipe</span><span class="p">,</span>
+    <span class="n">get_collection_from_recipe_path</span><span class="p">,</span>
+    <span class="n">image_in_sregistry</span><span class="p">,</span>
+    <span class="n">recipe_finder</span><span class="p">,</span>
+    <span class="n">image_pusher</span><span class="p">,</span>
+    <span class="n">dependency_resolver</span><span class="p">,</span>
+    <span class="n">dependency_drill_down</span><span class="p">,</span>
+    <span class="n">get_dependency_from_recipe</span><span class="p">,</span>
+    <span class="n">recipe_list_sanity_check</span><span class="p">,</span>
+    <span class="n">get_path_from_dependency</span><span class="p">,</span>
+    <span class="n">is_own_dependency</span>
+<span class="p">)</span>
+
+<span class="n">LOGGER</span> <span class="o">=</span> <span class="n">get_stdout_logger</span><span class="p">()</span>
+
+<span class="n">RECIPE_CONF</span> <span class="o">=</span> <span class="n">configure_test_recipe</span><span class="p">()[</span><span class="s1">&#39;TEST_RECIPE&#39;</span><span class="p">]</span>
+
+<span class="n">RECIPE_FILE_PATH</span> <span class="o">=</span> <span class="n">RECIPE_CONF</span><span class="p">[</span><span class="s1">&#39;recipe_file_path&#39;</span><span class="p">]</span>
+<span class="n">COLLECTION</span> <span class="o">=</span> <span class="n">RECIPE_CONF</span><span class="p">[</span><span class="s1">&#39;collection_name&#39;</span><span class="p">]</span>
+<span class="n">MODULE_DIR</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="vm">__file__</span><span class="p">))</span>
+
+
+<div class="viewcode-block" id="TestImageInSRegistry"><a class="viewcode-back" href="../tests/test_image_recipe_tools.html#test_image_recipe_tools.TestImageInSRegistry">[docs]</a><span class="k">class</span> <span class="nc">TestImageInSRegistry</span><span class="p">(</span><span class="n">unittest</span><span class="o">.</span><span class="n">TestCase</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Test the function to check, if an image already exists in the sregistry. &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">setUp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s1">&#39;SREGISTRY_CLIENT&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;registry&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">builder</span> <span class="o">=</span> <span class="n">Builder</span><span class="p">(</span><span class="n">recipe_path</span><span class="o">=</span><span class="n">RECIPE_FILE_PATH</span><span class="p">,</span> <span class="n">image_type</span><span class="o">=</span><span class="s1">&#39;simg&#39;</span><span class="p">)</span>
+        <span class="n">_build_info</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">builder</span><span class="o">.</span><span class="n">build</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">collection</span> <span class="o">=</span> <span class="n">_build_info</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">image_path</span> <span class="o">=</span> <span class="n">_build_info</span><span class="p">[</span><span class="s1">&#39;image_full_path&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">collection</span> <span class="o">=</span> <span class="n">_build_info</span><span class="p">[</span><span class="s1">&#39;collection_name&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">version</span> <span class="o">=</span> <span class="n">_build_info</span><span class="p">[</span><span class="s1">&#39;image_version&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">image</span> <span class="o">=</span> <span class="n">_build_info</span><span class="p">[</span><span class="s1">&#39;container_name&#39;</span><span class="p">]</span>
+
+        <span class="n">image_pusher</span><span class="p">(</span>
+            <span class="n">image_path</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">image_path</span><span class="p">,</span>
+            <span class="n">collection</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">collection</span><span class="p">,</span>
+            <span class="n">version</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">version</span><span class="p">,</span>
+            <span class="n">image</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">image</span>
+        <span class="p">)</span>
+
+<div class="viewcode-block" id="TestImageInSRegistry.test_image_in_sregistry"><a class="viewcode-back" href="../tests/test_image_recipe_tools.html#test_image_recipe_tools.TestImageInSRegistry.test_image_in_sregistry">[docs]</a>    <span class="k">def</span> <span class="nf">test_image_in_sregistry</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Tested function should return correct boolean for image existence. &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">image_in_sregistry</span><span class="p">(</span>
+            <span class="n">collection</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">collection</span><span class="p">,</span>
+            <span class="n">version</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">version</span><span class="p">,</span>
+            <span class="n">image</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">image</span>
+        <span class="p">))</span>
+
+        <span class="n">call</span><span class="p">([</span>
+            <span class="s1">&#39;sregistry&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;delete&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;-f&#39;</span><span class="p">,</span>
+            <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">/</span><span class="si">%s</span><span class="s2">:</span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">collection</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">image</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">version</span><span class="p">)</span>
+            <span class="p">])</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertFalse</span><span class="p">(</span><span class="n">image_in_sregistry</span><span class="p">(</span>
+            <span class="n">collection</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">collection</span><span class="p">,</span>
+            <span class="n">version</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">version</span><span class="p">,</span>
+            <span class="n">image</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">image</span>
+        <span class="p">))</span></div>
+
+
+
+    <span class="k">def</span> <span class="nf">tearDown</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">LOGGER</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Deleting local test image.&quot;</span><span class="p">)</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">image_path</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestRecipeFinder"><a class="viewcode-back" href="../tests/test_image_recipe_tools.html#test_image_recipe_tools.TestRecipeFinder">[docs]</a><span class="k">class</span> <span class="nc">TestRecipeFinder</span><span class="p">(</span><span class="n">unittest</span><span class="o">.</span><span class="n">TestCase</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Test the generator that returns directory and file information. &quot;&quot;&quot;</span>
+
+    <span class="n">RECIPE_GRANDPARENT_FOLDER</span> <span class="o">=</span> <span class="n">MODULE_DIR</span>
+
+<div class="viewcode-block" id="TestRecipeFinder.test_exceptions"><a class="viewcode-back" href="../tests/test_image_recipe_tools.html#test_image_recipe_tools.TestRecipeFinder.test_exceptions">[docs]</a>    <span class="k">def</span> <span class="nf">test_exceptions</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Test if specified exceptions are raised. &quot;&quot;&quot;</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">OSError</span><span class="p">):</span>
+            <span class="nb">next</span><span class="p">(</span><span class="n">recipe_finder</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)))</span></div>
+
+<div class="viewcode-block" id="TestRecipeFinder.test_recipe_finder"><a class="viewcode-back" href="../tests/test_image_recipe_tools.html#test_image_recipe_tools.TestRecipeFinder.test_recipe_finder">[docs]</a>    <span class="k">def</span> <span class="nf">test_recipe_finder</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Test if recipes can be found and returned as expected. &quot;&quot;&quot;</span>
+        <span class="n">_finder</span> <span class="o">=</span> <span class="n">recipe_finder</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">RECIPE_GRANDPARENT_FOLDER</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertIsInstance</span><span class="p">(</span><span class="n">_finder</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">GeneratorType</span><span class="p">)</span>
+        <span class="n">_recipe</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">_finder</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">_recipe</span><span class="p">,</span> <span class="n">RECIPE_FILE_PATH</span><span class="p">)</span></div></div>
+
+<div class="viewcode-block" id="TestImagePusher"><a class="viewcode-back" href="../tests/test_image_recipe_tools.html#test_image_recipe_tools.TestImagePusher">[docs]</a><span class="k">class</span> <span class="nc">TestImagePusher</span><span class="p">(</span><span class="n">unittest</span><span class="o">.</span><span class="n">TestCase</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Test the function to Push an image to an sregistry. &quot;&quot;&quot;</span>
+
+    <span class="n">image_path</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+    <span class="n">collection</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+    <span class="n">version</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+    <span class="n">image</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+
+    <span class="k">def</span> <span class="nf">setUp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s1">&#39;SREGISTRY_CLIENT&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;registry&#39;</span>
+        <span class="n">_builder</span> <span class="o">=</span> <span class="n">Builder</span><span class="p">(</span><span class="n">recipe_path</span><span class="o">=</span><span class="n">RECIPE_FILE_PATH</span><span class="p">,</span> <span class="n">image_type</span><span class="o">=</span><span class="s1">&#39;simg&#39;</span><span class="p">)</span>
+        <span class="n">_build_info</span> <span class="o">=</span> <span class="n">_builder</span><span class="o">.</span><span class="n">build</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">image_path</span> <span class="o">=</span> <span class="n">_build_info</span><span class="p">[</span><span class="s1">&#39;image_full_path&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">collection</span> <span class="o">=</span> <span class="n">_build_info</span><span class="p">[</span><span class="s1">&#39;collection_name&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">version</span> <span class="o">=</span> <span class="n">_build_info</span><span class="p">[</span><span class="s1">&#39;image_version&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">image</span> <span class="o">=</span> <span class="n">_build_info</span><span class="p">[</span><span class="s1">&#39;container_name&#39;</span><span class="p">]</span>
+
+<div class="viewcode-block" id="TestImagePusher.test_image_pusher"><a class="viewcode-back" href="../tests/test_image_recipe_tools.html#test_image_recipe_tools.TestImagePusher.test_image_pusher">[docs]</a>    <span class="k">def</span> <span class="nf">test_image_pusher</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Test the image upload function. &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span>
+            <span class="n">image_pusher</span><span class="p">(</span>
+                <span class="n">image_path</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">image_path</span><span class="p">,</span>
+                <span class="n">collection</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">collection</span><span class="p">,</span>
+                <span class="n">version</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">version</span><span class="p">,</span>
+                <span class="n">image</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">image</span>
+                <span class="p">)</span>
+        <span class="p">)</span>
+        <span class="c1"># Does the image exist inside the sregistry?</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span>
+            <span class="n">call</span><span class="p">([</span>
+                <span class="s1">&#39;sregistry&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;search&#39;</span><span class="p">,</span>
+                <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">/</span><span class="si">%s</span><span class="s2">:</span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">collection</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">image</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">version</span><span class="p">)</span>
+                <span class="p">]),</span>
+            <span class="mi">0</span>
+        <span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">tearDown</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">LOGGER</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Deleting remote test image.&quot;</span><span class="p">)</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">image_path</span><span class="p">)</span>
+        <span class="n">call</span><span class="p">([</span>
+            <span class="s1">&#39;sregistry&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;delete&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;-f&#39;</span><span class="p">,</span>
+            <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">/</span><span class="si">%s</span><span class="s2">:</span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">collection</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">image</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">version</span><span class="p">)</span>
+            <span class="p">])</span></div>
+
+<div class="viewcode-block" id="TestInfoFromRecipe"><a class="viewcode-back" href="../tests/test_image_recipe_tools.html#test_image_recipe_tools.TestInfoFromRecipe">[docs]</a><span class="k">class</span> <span class="nc">TestInfoFromRecipe</span><span class="p">(</span><span class="n">unittest</span><span class="o">.</span><span class="n">TestCase</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Test the functions to return collection, image version and name given a recipe.&quot;&quot;&quot;</span>
+
+    <span class="n">TEST_IMAGE_NAME</span> <span class="o">=</span> <span class="s1">&#39;test_recipe&#39;</span>
+    <span class="n">TEST_VERSIONED_RECIPE_NAME</span> <span class="o">=</span> <span class="n">TEST_IMAGE_NAME</span><span class="o">+</span><span class="s1">&#39;.</span><span class="si">%s</span><span class="s1">.recipe&#39;</span>
+    <span class="n">TEST_RECIPE_NAME</span> <span class="o">=</span> <span class="n">TEST_IMAGE_NAME</span><span class="o">+</span><span class="s1">&#39;.recipe&#39;</span>
+
+<div class="viewcode-block" id="TestInfoFromRecipe.test_get_coll_from_recipe_path"><a class="viewcode-back" href="../tests/test_image_recipe_tools.html#test_image_recipe_tools.TestInfoFromRecipe.test_get_coll_from_recipe_path">[docs]</a>    <span class="k">def</span> <span class="nf">test_get_coll_from_recipe_path</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Test the function to return the collection name given a recipes full path.&quot;&quot;&quot;</span>
+        <span class="n">_test_collection_name</span> <span class="o">=</span> <span class="s1">&#39;collection_test&#39;</span>
+        <span class="n">_test_collection_full_path</span> <span class="o">=</span> <span class="s1">&#39;/test/&#39;</span> <span class="o">+</span> <span class="n">_test_collection_name</span>
+        <span class="n">_recipe_file_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">TEST_VERSIONED_RECIPE_NAME</span> <span class="o">%</span> <span class="s1">&#39;1.0&#39;</span>
+        <span class="n">_recipe_path</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">%s</span><span class="s1">/</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span>
+            <span class="n">_test_collection_full_path</span><span class="p">,</span>
+            <span class="n">_recipe_file_name</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span>
+            <span class="n">_test_collection_name</span><span class="p">,</span>
+            <span class="n">get_collection_from_recipe_path</span><span class="p">(</span>
+                <span class="n">recipe_file_full_path</span><span class="o">=</span><span class="n">_recipe_path</span>
+            <span class="p">)</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="TestInfoFromRecipe.test_get_version_from_recipe"><a class="viewcode-back" href="../tests/test_image_recipe_tools.html#test_image_recipe_tools.TestInfoFromRecipe.test_get_version_from_recipe">[docs]</a>    <span class="k">def</span> <span class="nf">test_get_version_from_recipe</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Test the function to return image version given a recipe name.&quot;&quot;&quot;</span>
+        <span class="n">_recipe_version</span> <span class="o">=</span> <span class="s1">&#39;1.0&#39;</span>
+        <span class="n">_recipe_with_version</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">TEST_VERSIONED_RECIPE_NAME</span> <span class="o">%</span> <span class="p">(</span><span class="n">_recipe_version</span><span class="p">)</span>
+        <span class="n">_recipe_latest</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">TEST_RECIPE_NAME</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span>
+            <span class="n">_recipe_version</span><span class="p">,</span>
+            <span class="n">get_version_from_recipe</span><span class="p">(</span><span class="n">recipe_file_name</span><span class="o">=</span><span class="n">_recipe_with_version</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span>
+            <span class="s1">&#39;latest&#39;</span><span class="p">,</span>
+            <span class="n">get_version_from_recipe</span><span class="p">(</span><span class="n">recipe_file_name</span><span class="o">=</span><span class="n">_recipe_latest</span><span class="p">)</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestInfoFromRecipe.test_get_image_name_from_recipe"><a class="viewcode-back" href="../tests/test_image_recipe_tools.html#test_image_recipe_tools.TestInfoFromRecipe.test_get_image_name_from_recipe">[docs]</a>    <span class="k">def</span> <span class="nf">test_get_image_name_from_recipe</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Test the function to return image name given a recipe name.&quot;&quot;&quot;</span>
+        <span class="n">_recipe_file_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">TEST_VERSIONED_RECIPE_NAME</span> <span class="o">%</span> <span class="s2">&quot;1.0&quot;</span>
+        <span class="n">_image_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">TEST_IMAGE_NAME</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span>
+            <span class="n">_image_name</span><span class="p">,</span>
+            <span class="n">get_image_name_from_recipe</span><span class="p">(</span><span class="n">recipe_file_name</span><span class="o">=</span><span class="n">_recipe_file_name</span><span class="p">)</span>
+            <span class="p">)</span></div></div>
+
+<div class="viewcode-block" id="TestDependencyResolver"><a class="viewcode-back" href="../tests/test_image_recipe_tools.html#test_image_recipe_tools.TestDependencyResolver">[docs]</a><span class="k">class</span> <span class="nc">TestDependencyResolver</span><span class="p">(</span><span class="n">unittest</span><span class="o">.</span><span class="n">TestCase</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Test the function, that sorts a list of recipe files on their dependencies. &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">setUp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">main_recipe</span> <span class="o">=</span> <span class="n">RECIPE_FILE_PATH</span>
+        <span class="c1"># Recipe containing folder</span>
+        <span class="n">_recipe_folder_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">main_recipe</span><span class="p">)</span>
+        <span class="c1"># Just its filename</span>
+        <span class="n">_recipe_file_name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">main_recipe</span><span class="p">)</span>
+        <span class="c1"># Name of the image it creates</span>
+        <span class="n">_image_name</span> <span class="o">=</span> <span class="n">get_image_name_from_recipe</span><span class="p">(</span><span class="n">_recipe_file_name</span><span class="p">)</span>
+        <span class="c1"># Version of the image it creates</span>
+        <span class="n">_image_version</span> <span class="o">=</span> <span class="n">get_version_from_recipe</span><span class="p">(</span><span class="n">_recipe_file_name</span><span class="p">)</span>
+        <span class="c1"># Collection of the image it creates</span>
+        <span class="n">_collection</span> <span class="o">=</span> <span class="n">get_collection_from_recipe_path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">main_recipe</span><span class="p">)</span>
+        <span class="c1"># The Base folder for all recipes</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">recipe_base_folder_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">RECIPE_FILE_PATH</span><span class="p">)</span>
+        <span class="p">)</span>
+
+        <span class="n">_sregistry_host_name_raw</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s1">&#39;SREGISTRY_HOSTNAME&#39;</span><span class="p">]</span>
+        <span class="c1"># Strip protocol part from the hostname</span>
+        <span class="n">_host_name</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;^http[s]?:\/\/(.*)$&#39;</span><span class="p">,</span> <span class="sa">r</span><span class="s1">&#39;\1&#39;</span><span class="p">,</span> <span class="n">_sregistry_host_name_raw</span><span class="p">)</span>
+
+        <span class="n">_child_version</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="mf">1.0</span><span class="p">)</span>
+        <span class="n">_child_name</span> <span class="o">=</span> <span class="s2">&quot;test_dependency&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">child_dependency_file</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">/</span><span class="si">%s</span><span class="s2">.</span><span class="si">%s</span><span class="s2">.recipe&quot;</span> <span class="o">%</span> <span class="p">(</span>
+            <span class="n">_recipe_folder_path</span><span class="p">,</span>
+            <span class="n">_child_name</span><span class="p">,</span>
+            <span class="nb">str</span><span class="p">(</span><span class="n">_child_version</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">child_dependency</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">/</span><span class="si">%s</span><span class="s2">/</span><span class="si">%s</span><span class="s2">:</span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span>
+            <span class="n">_host_name</span><span class="p">,</span>
+            <span class="n">_collection</span><span class="p">,</span>
+            <span class="n">_image_name</span><span class="p">,</span>
+            <span class="n">_image_version</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">child_of_child_dependency_file</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">/</span><span class="si">%s</span><span class="s2">.</span><span class="si">%s</span><span class="s2">.recipe&quot;</span> <span class="o">%</span><span class="p">(</span>
+            <span class="n">_recipe_folder_path</span><span class="p">,</span>
+            <span class="n">_child_name</span><span class="p">,</span>
+            <span class="nb">str</span><span class="p">(</span><span class="n">_child_version</span><span class="o">+</span><span class="mf">0.1</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">child_of_child_dependency</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">/</span><span class="si">%s</span><span class="s2">/</span><span class="si">%s</span><span class="s2">:</span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span>
+            <span class="n">_host_name</span><span class="p">,</span>
+            <span class="n">_collection</span><span class="p">,</span>
+            <span class="n">_child_name</span><span class="p">,</span>
+            <span class="n">_child_version</span>
+        <span class="p">)</span>
+        <span class="c1"># Set up mock recipes.</span>
+        <span class="c1"># One that depends on the main recipe and</span>
+        <span class="c1"># one that depends on the first.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dependency_files</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">child_dependency_file</span><span class="p">:</span>
+            <span class="s2">&quot;BOOTSTRAP: shub</span><span class="se">\n</span><span class="s2">FROM: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">child_dependency</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">child_of_child_dependency_file</span><span class="p">:</span>
+            <span class="s2">&quot;BOOTSTRAP: shub</span><span class="se">\n</span><span class="s2">FROM: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">child_of_child_dependency</span>
+        <span class="p">}</span>
+
+        <span class="c1"># Create mock recipes.</span>
+        <span class="k">for</span> <span class="n">filename</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">dependency_files</span><span class="p">:</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+                <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dependency_files</span><span class="p">[</span><span class="n">filename</span><span class="p">])</span>
+
+<div class="viewcode-block" id="TestDependencyResolver.test_get_dependency_from_recipe"><a class="viewcode-back" href="../tests/test_image_recipe_tools.html#test_image_recipe_tools.TestDependencyResolver.test_get_dependency_from_recipe">[docs]</a>    <span class="k">def</span> <span class="nf">test_get_dependency_from_recipe</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Test the function, that reads the dependency from a recipes header. &quot;&quot;&quot;</span>
+        <span class="n">_test_dependency</span> <span class="o">=</span> <span class="n">get_dependency_from_recipe</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">main_recipe</span><span class="p">)</span>
+        <span class="k">if</span> <span class="s1">&#39;shub&#39;</span> <span class="ow">in</span> <span class="n">_test_dependency</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">fail</span><span class="p">(</span><span class="n">msg</span><span class="o">=</span><span class="s1">&#39;Dependency was read wrong&#39;</span><span class="p">)</span>
+        <span class="n">_test_dependency</span> <span class="o">=</span> <span class="n">get_dependency_from_recipe</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">child_dependency_file</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertIn</span><span class="p">(</span><span class="s1">&#39;shub&#39;</span><span class="p">,</span> <span class="n">_test_dependency</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">_test_dependency</span><span class="p">[</span><span class="s1">&#39;shub&#39;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">child_dependency</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestDependencyResolver.test_get_path_from_dependency"><a class="viewcode-back" href="../tests/test_image_recipe_tools.html#test_image_recipe_tools.TestDependencyResolver.test_get_path_from_dependency">[docs]</a>    <span class="k">def</span> <span class="nf">test_get_path_from_dependency</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Test the function to get the recipe path from a dependency. &quot;&quot;&quot;</span>
+        <span class="c1"># Test for parent of first child</span>
+        <span class="n">_expected_file_path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">main_recipe</span>
+        <span class="n">_test_file_path</span> <span class="o">=</span> <span class="n">get_path_from_dependency</span><span class="p">(</span>
+            <span class="n">recipe_dependency_value</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">child_dependency</span><span class="p">,</span>
+            <span class="n">recipe_base_folder_path</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">recipe_base_folder_path</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">_expected_file_path</span><span class="p">,</span> <span class="n">_test_file_path</span><span class="p">)</span>
+        <span class="c1"># Test for parent of child of child</span>
+        <span class="n">_expected_file_path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">child_dependency_file</span>
+        <span class="n">_test_file_path</span> <span class="o">=</span> <span class="n">get_path_from_dependency</span><span class="p">(</span>
+            <span class="n">recipe_dependency_value</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">child_of_child_dependency</span><span class="p">,</span>
+            <span class="n">recipe_base_folder_path</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">recipe_base_folder_path</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">_expected_file_path</span><span class="p">,</span> <span class="n">_test_file_path</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestDependencyResolver.test_is_own_dependency"><a class="viewcode-back" href="../tests/test_image_recipe_tools.html#test_image_recipe_tools.TestDependencyResolver.test_is_own_dependency">[docs]</a>    <span class="k">def</span> <span class="nf">test_is_own_dependency</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Test the function that checks if dependency is to a private sregistry.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertFalse</span><span class="p">(</span><span class="n">is_own_dependency</span><span class="p">(</span><span class="s2">&quot;collection/container:version&quot;</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">is_own_dependency</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestDependencyResolver.test_recipe_list_sanity_check"><a class="viewcode-back" href="../tests/test_image_recipe_tools.html#test_image_recipe_tools.TestDependencyResolver.test_recipe_list_sanity_check">[docs]</a>    <span class="k">def</span> <span class="nf">test_recipe_list_sanity_check</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Test the function that finds recipes that would create images with the same name. &quot;&quot;&quot;</span>
+        <span class="n">_sane_list</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="s2">&quot;/path/to/project/collection/recipe_name.1.0.recipe&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;/path/to/project/collection_two/recipe_name.1.0.recipe&quot;</span>
+        <span class="p">]</span>
+        <span class="n">_not_sane_list</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="s2">&quot;/path/to/project/collection/recipe_name.1.0.recipe&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;/path/to/project/subfolder/collection/recipe_name.1.0.recipe&quot;</span>
+        <span class="p">]</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertIsNone</span><span class="p">(</span><span class="n">recipe_list_sanity_check</span><span class="p">(</span><span class="n">_sane_list</span><span class="p">))</span>
+        <span class="k">except</span> <span class="ne">RuntimeError</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">fail</span><span class="p">(</span><span class="n">msg</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> should not fail on a sane list.&quot;</span> <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="n">recipe_list_sanity_check</span><span class="p">))</span>
+
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">RuntimeError</span><span class="p">):</span>
+            <span class="n">recipe_list_sanity_check</span><span class="p">(</span><span class="n">recipe_file_paths</span><span class="o">=</span><span class="n">_not_sane_list</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestDependencyResolver.test_dependency_resolver"><a class="viewcode-back" href="../tests/test_image_recipe_tools.html#test_image_recipe_tools.TestDependencyResolver.test_dependency_resolver">[docs]</a>    <span class="k">def</span> <span class="nf">test_dependency_resolver</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Test the function that orders a list on recipe dependencies. &quot;&quot;&quot;</span>
+        <span class="n">_unordered_recipe_list</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">child_of_child_dependency_file</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">main_recipe</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">child_dependency_file</span>
+        <span class="p">]</span>
+        <span class="n">_ordered_recipe_list</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">main_recipe</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">child_dependency_file</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">child_of_child_dependency_file</span>
+        <span class="p">]</span>
+        <span class="n">_test_list</span> <span class="o">=</span> <span class="n">dependency_resolver</span><span class="p">(</span>
+            <span class="n">recipe_file_paths</span><span class="o">=</span><span class="n">_unordered_recipe_list</span><span class="p">,</span>
+            <span class="n">recipe_base_path</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">recipe_base_folder_path</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">_test_list</span><span class="p">,</span> <span class="n">_ordered_recipe_list</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestDependencyResolver.test_dependency_drill_down"><a class="viewcode-back" href="../tests/test_image_recipe_tools.html#test_image_recipe_tools.TestDependencyResolver.test_dependency_drill_down">[docs]</a>    <span class="k">def</span> <span class="nf">test_dependency_drill_down</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Test the function that follows a single dependency chain. &quot;&quot;&quot;</span>
+        <span class="n">_expected_dict</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">main_recipe</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">child_dependency_file</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">child_of_child_dependency_file</span><span class="p">:</span> <span class="mi">2</span>
+        <span class="p">}</span>
+        <span class="c1"># Set up dict without any work done.</span>
+        <span class="n">_test_dependency_dict</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="p">}</span>
+        <span class="n">dependency_drill_down</span><span class="p">(</span>
+            <span class="n">dependency_dict</span><span class="o">=</span><span class="n">_test_dependency_dict</span><span class="p">,</span>
+            <span class="n">recipe_path</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">child_of_child_dependency_file</span><span class="p">,</span>
+            <span class="n">recipe_base_path</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">recipe_base_folder_path</span>
+        <span class="p">)</span>
+        <span class="c1"># Test function for dict without any work done.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span>
+            <span class="n">_expected_dict</span><span class="p">,</span>
+            <span class="n">_test_dependency_dict</span>
+        <span class="p">)</span>
+        <span class="c1"># Set up dict with some work done.</span>
+        <span class="n">_test_dependency_dict</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">main_recipe</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">child_dependency_file</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="p">}</span>
+        <span class="n">dependency_drill_down</span><span class="p">(</span>
+            <span class="n">dependency_dict</span><span class="o">=</span><span class="n">_test_dependency_dict</span><span class="p">,</span>
+            <span class="n">recipe_path</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">child_of_child_dependency_file</span><span class="p">,</span>
+            <span class="n">recipe_base_path</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">recipe_base_folder_path</span>
+        <span class="p">)</span>
+        <span class="c1"># Test function for dict with some work done.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span>
+            <span class="n">_expected_dict</span><span class="p">,</span>
+            <span class="n">_test_dependency_dict</span>
+        <span class="p">)</span></div>
+
+
+    <span class="k">def</span> <span class="nf">tearDown</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">filename</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">dependency_files</span><span class="p">:</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Singularity Images 0.1.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" >Module code</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2018, Dominique Hansen.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.9.
+    </div>
+  </body>
+</html>

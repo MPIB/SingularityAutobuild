@@ -1,0 +1,235 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Singularity Builder &#8212; Singularity Images 0.1.0 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="top" title="Singularity Images 0.1.0 documentation" href="../index.html" />
+    <link rel="next" title="Unit tests for the Gitlab Tools Module" href="../tests/test_gitlab_tools.html" />
+    <link rel="prev" title="Image Recipe Tools" href="singulartiy_builder.image_recipe_tools.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../tests/test_gitlab_tools.html" title="Unit tests for the Gitlab Tools Module"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="singulartiy_builder.image_recipe_tools.html" title="Image Recipe Tools"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Singularity Images 0.1.0 documentation</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-singularity_autobuild.singularity_builder">
+<span id="singularity-builder"></span><h1>Singularity Builder<a class="headerlink" href="#module-singularity_autobuild.singularity_builder" title="Permalink to this headline">¶</a></h1>
+<p>Build singularity images.</p>
+<dl class="class">
+<dt id="singularity_autobuild.singularity_builder.Builder">
+<em class="property">class </em><code class="descclassname">singularity_autobuild.singularity_builder.</code><code class="descname">Builder</code><span class="sig-paren">(</span><em>recipe_path</em>, <em>image_type='simg'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/singularity_autobuild/singularity_builder.html#Builder"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#singularity_autobuild.singularity_builder.Builder" title="Permalink to this definition">¶</a></dt>
+<dd><p>Facilitate the building of a Singularity image from a recipe.</p>
+<p>Information about the image to be build is gathered at
+instantiation, using the passed recipe file path.</p>
+<p>Building is done by calling the Builder.build() method.
+This method calls the singularity installation on the
+system using the subprocess library.</p>
+<p>Output of the singularity call is piped into a logfile,
+inside the folder build_logs. build_logs will be created
+at runtime if it does not exist.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>recipe_path</strong> (<code class="xref py py-class docutils literal"><span class="pre">str</span></code>) &#8211; The full path to the singularity recipe</li>
+<li><strong>image_type</strong> (<code class="xref py py-class docutils literal"><span class="pre">str</span></code>) &#8211; The image type to be produces. identified by used suffix.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="singularity_autobuild.singularity_builder.Builder.build">
+<code class="descname">build</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/singularity_autobuild/singularity_builder.html#Builder.build"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#singularity_autobuild.singularity_builder.Builder.build" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calls singularity to build the image.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first"><code class="xref py py-class docutils literal"><span class="pre">dict</span></code></p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><p>Information about the build image:
+Full Path to it, name of its parent folder
+as collection name, version of the image and
+name of the container at the destination:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="p">{</span>
+    <span class="s1">&#39;image_full_path&#39;</span><span class="p">:</span> <span class="s1">&#39;/path/to/image.simg&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;collection_name&#39;</span><span class="p">:</span> <span class="s1">&#39;image_parent_folder&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;image_version&#39;</span><span class="p">:</span>   <span class="s1">&#39;1.0&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;container_name&#39;</span><span class="p">:</span>  <span class="s1">&#39;image_name&#39;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Raises:</th><td class="field-body"><ul class="first last simple">
+<li><strong>OSError</strong> &#8211; When Singularity could not be found/executed.</li>
+<li><strong>AttributeError</strong> &#8211; When Singularity failed with its given parameters.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="singularity_autobuild.singularity_builder.Builder.image_info">
+<code class="descname">image_info</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/singularity_autobuild/singularity_builder.html#Builder.image_info"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#singularity_autobuild.singularity_builder.Builder.image_info" title="Permalink to this definition">¶</a></dt>
+<dd><p>Collects data about the image.</p>
+<p>The container_name key returned through the dict is
+the same as the image name. It is intended to be used to
+set the container name in the sregistry.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">{&#8216;container_name&#8217;: &#8216;image_name&#8217;, &#8216;collection_name&#8217;: &#8216;image_parent_folder&#8217;, &#8216;image_version&#8217;: &#8216;image_version&#8217;, &#8216;image_full_path&#8217;: &#8216;/FULLPATH/TO/image_name.image_type&#8217;}</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Information about the build image:
+Full Path to it, name of its parent folder
+as collection name, version of the image and
+name of the container at the destination.<div class="highlight-python"><div class="highlight"><pre><span></span><span class="p">{</span>
+    <span class="s1">&#39;image_full_path&#39;</span><span class="p">:</span> <span class="s1">&#39;/FULLPATH/TO/image_name.image_type&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;collection_name&#39;</span><span class="p">:</span> <span class="s1">&#39;image_parent_folder&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;image_version&#39;</span><span class="p">:</span>   <span class="s1">&#39;image_version&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;container_name&#39;</span><span class="p">:</span>  <span class="s1">&#39;image_name&#39;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="singularity_autobuild.singularity_builder.Builder.image_name">
+<code class="descname">image_name</code><em class="property"> = None</em><a class="headerlink" href="#singularity_autobuild.singularity_builder.Builder.image_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Make sure that the subprocess logdir exists.
+GitLab ci will want the directory to be there,
+if it was defined as artifact in the pipeline defintion,
+even if nothing was build.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="singularity_autobuild.singularity_builder.Builder.is_build">
+<code class="descname">is_build</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/singularity_autobuild/singularity_builder.html#Builder.is_build"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#singularity_autobuild.singularity_builder.Builder.is_build" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks, updates and returns current build status of the image.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><code class="xref py py-class docutils literal"><span class="pre">bool</span></code></td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Build status of the image.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="singulartiy_builder.image_recipe_tools.html"
+                        title="previous chapter">Image Recipe Tools</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="../tests/test_gitlab_tools.html"
+                        title="next chapter">Unit tests for the Gitlab Tools Module</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/modules/singulartiy_builder.singulartiy_builder.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../tests/test_gitlab_tools.html" title="Unit tests for the Gitlab Tools Module"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="singulartiy_builder.image_recipe_tools.html" title="Image Recipe Tools"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Singularity Images 0.1.0 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2018, Dominique Hansen.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.9.
+    </div>
+  </body>
+</html>

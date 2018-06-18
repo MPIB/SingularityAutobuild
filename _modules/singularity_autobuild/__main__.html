@@ -1,0 +1,267 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>singularity_autobuild.__main__ &#8212; Singularity Images 0.1.0 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="top" title="Singularity Images 0.1.0 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">Singularity Images 0.1.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for singularity_autobuild.__main__</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot; Main Module to make the builder directly executable through cli.</span>
+
+
+<span class="sd">This __main__ module contains function arg_parser(),</span>
+<span class="sd">parsing command line options and</span>
+<span class="sd">function main(), controlling the applications flow.</span>
+
+<span class="sd">Command line Options are:</span>
+
+
+<span class="sd"> --path         Full path to the base folder, containing all recipe files</span>
+<span class="sd">                to be build.</span>
+<span class="sd"> --image_type   Image type, in the form of types suffix,</span>
+<span class="sd">                of the images to be build.</span>
+
+<span class="sd">scrolls</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">argparse</span>
+<span class="kn">from</span> <span class="nn">singularity_autobuild.singularity_builder</span> <span class="k">import</span> <span class="n">Builder</span>
+<span class="kn">from</span> <span class="nn">singularity_autobuild.image_recipe_tools</span> <span class="k">import</span> <span class="p">(</span>
+    <span class="n">recipe_finder</span><span class="p">,</span>
+    <span class="n">image_pusher</span><span class="p">,</span>
+    <span class="n">image_in_sregistry</span><span class="p">,</span>
+    <span class="n">dependency_resolver</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">singularity_autobuild.gitlab_tools</span> <span class="k">import</span> <span class="p">(</span>
+    <span class="n">GitLabPushEventInfo</span><span class="p">,</span>
+    <span class="n">call_gitlab_events_api</span>
+<span class="p">)</span>
+
+<span class="kn">from</span> <span class="nn">singularity_autobuild.autobuild_logger</span> <span class="k">import</span> <span class="n">get_stdout_logger</span>
+
+<span class="n">LOGGER</span> <span class="o">=</span> <span class="n">get_stdout_logger</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;main&#39;</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="s1">&#39;INFO&#39;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="arg_parser"><a class="viewcode-back" href="../../modules/singulartiy_builder.html#singularity_autobuild.__main__.arg_parser">[docs]</a><span class="k">def</span> <span class="nf">arg_parser</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">argparse</span><span class="o">.</span><span class="n">Namespace</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot; Reads command line arguments.</span>
+
+<span class="sd">    :returns: Values of accepted command line arguments.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">(</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;&quot;&quot;Find all recipes, build them and push all their images to an sregistry.</span>
+<span class="s2">        Recipes are identified by the suffix &quot;.recipe&quot;.</span>
+<span class="s2">        The image name will be taken from the recipe name using everything from the first character till the first &quot;.&quot; occurrence.</span>
+<span class="s2">        The version will be taken from the recipe name using everything from the first &quot;.&quot; till the suffix &quot;.recipe&quot;.</span>
+<span class="s2">        The collection name will be taken from the recipes parent folder.</span>
+<span class="s2">        &quot;&quot;&quot;</span>
+    <span class="p">)</span>
+    <span class="n">_parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--path&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Base path to search recipes.&quot;</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">_parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--image_type&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;The type of image to be build&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">_parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="main"><a class="viewcode-back" href="../../modules/singulartiy_builder.html#singularity_autobuild.__main__.main">[docs]</a><span class="k">def</span> <span class="nf">main</span><span class="p">(</span>
+        <span class="n">search_folder</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">image_type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;simg&#39;</span>
+    <span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Function to tie the functionality of this module together.</span>
+
+<span class="sd">    :param search_folder: The base folder for :py:func:`image_recipe_tools.recipe_finder`</span>
+<span class="sd">                          to search through.</span>
+<span class="sd">    :param image_type:    The image type to be passed to :class:`singularity_builder.Builder`</span>
+<span class="sd">                          constructor and to be created by</span>
+<span class="sd">                          :meth:`singularity_builder.Builder.build`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+
+    <span class="k">if</span> <span class="n">search_folder</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># Params are not set via call, get command line params</span>
+        <span class="n">_arguments</span> <span class="o">=</span> <span class="n">arg_parser</span><span class="p">()</span>
+        <span class="n">search_folder</span> <span class="o">=</span> <span class="n">_arguments</span><span class="o">.</span><span class="n">path</span>
+        <span class="k">if</span> <span class="s1">&#39;image_type&#39;</span> <span class="ow">in</span> <span class="n">_arguments</span><span class="p">:</span>
+            <span class="n">image_type</span> <span class="o">=</span> <span class="n">_arguments</span><span class="o">.</span><span class="n">image_type</span>
+
+    <span class="c1"># Setup for Building</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">_api_url</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s1">&#39;GITLAB_API_STRING&#39;</span><span class="p">]</span>
+        <span class="n">_api_key</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s1">&#39;GITLAB_API_TOKEN&#39;</span><span class="p">]</span>
+        <span class="n">_git_folder</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s1">&#39;CI_PROJECT_DIR&#39;</span><span class="p">]</span>
+    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">EnvironmentError</span><span class="p">(</span><span class="s2">&quot;GitLab API environment variables are not set.&quot;</span><span class="p">)</span>
+    <span class="c1"># Call the event API of the GitLab instance used.</span>
+    <span class="n">_gitlab_response</span> <span class="o">=</span> <span class="n">call_gitlab_events_api</span><span class="p">(</span>
+        <span class="n">api_url</span><span class="o">=</span><span class="n">_api_url</span><span class="p">,</span>
+        <span class="n">api_key</span><span class="o">=</span><span class="n">_api_key</span>
+        <span class="p">)</span>
+
+    <span class="n">_file_checker</span> <span class="o">=</span> <span class="n">GitLabPushEventInfo</span><span class="p">(</span>
+        <span class="n">git_lab_response</span><span class="o">=</span><span class="n">_gitlab_response</span><span class="p">,</span>
+        <span class="n">local_repo</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">_git_folder</span><span class="p">)</span>
+        <span class="p">)</span>
+
+    <span class="n">_recipe_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">recipe</span> <span class="k">for</span> <span class="n">recipe</span> <span class="ow">in</span> <span class="n">recipe_finder</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="n">search_folder</span><span class="p">)]</span>
+
+    <span class="c1"># Start Building</span>
+    <span class="n">LOGGER</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Building all </span><span class="si">%s</span><span class="s1"> in </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">image_type</span><span class="p">,</span> <span class="n">search_folder</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">recipe_path</span> <span class="ow">in</span> <span class="n">dependency_resolver</span><span class="p">(</span>
+            <span class="n">recipe_file_paths</span><span class="o">=</span><span class="n">_recipe_list</span><span class="p">,</span>
+            <span class="n">recipe_base_path</span><span class="o">=</span><span class="n">search_folder</span>
+        <span class="p">):</span>
+        <span class="n">_builder</span> <span class="o">=</span> <span class="n">Builder</span><span class="p">(</span><span class="n">recipe_path</span><span class="o">=</span><span class="n">recipe_path</span><span class="p">,</span> <span class="n">image_type</span><span class="o">=</span><span class="n">image_type</span><span class="p">)</span>
+        <span class="n">_image_info</span> <span class="o">=</span> <span class="n">_builder</span><span class="o">.</span><span class="n">image_info</span><span class="p">()</span>
+        <span class="c1"># Does the image already exist in the sregistry?</span>
+        <span class="k">if</span> <span class="n">image_in_sregistry</span><span class="p">(</span>
+                <span class="n">collection</span><span class="o">=</span><span class="n">_image_info</span><span class="p">[</span><span class="s1">&#39;collection_name&#39;</span><span class="p">],</span>
+                <span class="n">version</span><span class="o">=</span><span class="n">_image_info</span><span class="p">[</span><span class="s1">&#39;image_version&#39;</span><span class="p">],</span>
+                <span class="n">image</span><span class="o">=</span><span class="n">_image_info</span><span class="p">[</span><span class="s1">&#39;container_name&#39;</span><span class="p">]</span>
+        <span class="p">):</span>
+            <span class="n">LOGGER</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">                Image already in SRegistry:</span>
+<span class="sd">                collection: %s</span>
+<span class="sd">                image:      %s</span>
+<span class="sd">                version:    %s</span>
+<span class="sd">                checking if its&#39; recipe has changed.&quot;&quot;&quot;</span><span class="p">,</span>
+                <span class="n">_image_info</span><span class="p">[</span><span class="s1">&#39;collection_name&#39;</span><span class="p">],</span>
+                <span class="n">_image_info</span><span class="p">[</span><span class="s1">&#39;container_name&#39;</span><span class="p">],</span>
+                <span class="n">_image_info</span><span class="p">[</span><span class="s1">&#39;image_version&#39;</span><span class="p">]</span>
+                <span class="p">)</span>
+            <span class="c1"># Was the recipe file modified since last push?</span>
+            <span class="c1"># This conditional together with the last one</span>
+            <span class="c1"># is used to skip recipes, whose corresponding</span>
+            <span class="c1"># image was already build and pushed once.</span>
+            <span class="c1"># Images whose recipes where changed since</span>
+            <span class="c1"># the last pushed are however build and reuploaded.</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">_file_checker</span><span class="o">.</span><span class="n">is_modified_file</span><span class="p">(</span><span class="n">recipe_path</span><span class="p">):</span>
+                <span class="n">LOGGER</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">                    Skipping Recipe not modified since last push:</span>
+<span class="sd">                    collection: %s</span>
+<span class="sd">                    image:      %s</span>
+<span class="sd">                    version:    %s&quot;&quot;&quot;</span><span class="p">,</span>
+                    <span class="n">_image_info</span><span class="p">[</span><span class="s1">&#39;collection_name&#39;</span><span class="p">],</span>
+                    <span class="n">_image_info</span><span class="p">[</span><span class="s1">&#39;container_name&#39;</span><span class="p">],</span>
+                    <span class="n">_image_info</span><span class="p">[</span><span class="s1">&#39;image_version&#39;</span><span class="p">]</span>
+                    <span class="p">)</span>
+                <span class="c1"># Skip build and upload.</span>
+                <span class="k">continue</span>
+        <span class="n">_builder</span> <span class="o">=</span> <span class="n">Builder</span><span class="p">(</span><span class="n">recipe_path</span><span class="o">=</span><span class="n">recipe_path</span><span class="p">,</span> <span class="n">image_type</span><span class="o">=</span><span class="n">image_type</span><span class="p">)</span>
+        <span class="n">_image_info</span> <span class="o">=</span> <span class="n">_builder</span><span class="o">.</span><span class="n">image_info</span><span class="p">()</span>
+        <span class="n">LOGGER</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+            <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Building:</span>
+<span class="sd">            collection: %s</span>
+<span class="sd">            image:      %s</span>
+<span class="sd">            version:    %s&quot;&quot;&quot;</span><span class="p">,</span>
+            <span class="n">_image_info</span><span class="p">[</span><span class="s1">&#39;collection_name&#39;</span><span class="p">],</span>
+            <span class="n">_image_info</span><span class="p">[</span><span class="s1">&#39;container_name&#39;</span><span class="p">],</span>
+            <span class="n">_image_info</span><span class="p">[</span><span class="s1">&#39;image_version&#39;</span><span class="p">]</span>
+            <span class="p">)</span>
+        <span class="c1"># Actual building process.</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">_image_info</span> <span class="o">=</span> <span class="n">_builder</span><span class="o">.</span><span class="n">build</span><span class="p">()</span>
+        <span class="k">except</span> <span class="ne">OSError</span><span class="p">:</span>
+            <span class="n">LOGGER</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                <span class="s2">&quot;File </span><span class="si">%s</span><span class="s2"> could not be build by Singularity.&quot;</span><span class="p">,</span>
+                <span class="n">recipe_path</span>
+                <span class="p">)</span>
+        <span class="c1"># Load into sregistry if the recipe build into an image.</span>
+        <span class="k">if</span> <span class="n">_builder</span><span class="o">.</span><span class="n">is_build</span><span class="p">():</span>
+            <span class="n">_pushed</span> <span class="o">=</span> <span class="n">image_pusher</span><span class="p">(</span>
+                <span class="n">image_path</span><span class="o">=</span><span class="n">_image_info</span><span class="p">[</span><span class="s1">&#39;image_full_path&#39;</span><span class="p">],</span>
+                <span class="n">collection</span><span class="o">=</span><span class="n">_image_info</span><span class="p">[</span><span class="s1">&#39;collection_name&#39;</span><span class="p">],</span>
+                <span class="n">version</span><span class="o">=</span><span class="n">_image_info</span><span class="p">[</span><span class="s1">&#39;image_version&#39;</span><span class="p">],</span>
+                <span class="n">image</span><span class="o">=</span><span class="n">_image_info</span><span class="p">[</span><span class="s1">&#39;container_name&#39;</span><span class="p">]</span>
+                <span class="p">)</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">_image_info</span><span class="p">[</span><span class="s1">&#39;image_full_path&#39;</span><span class="p">])</span>
+            <span class="k">if</span> <span class="n">_pushed</span><span class="p">:</span>
+                <span class="n">LOGGER</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Build and push was successful.&#39;</span><span class="p">)</span></div>
+
+
+<span class="c1"># Still testing for __name__ == __main__</span>
+<span class="c1"># to cleanly import this module during unit testing.</span>
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="n">main</span><span class="p">()</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">Singularity Images 0.1.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2018, Dominique Hansen.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.9.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,302 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>test_singularity_builder &#8212; Singularity Images 0.1.0 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="top" title="Singularity Images 0.1.0 documentation" href="../index.html" />
+    <link rel="up" title="Module code" href="index.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Singularity Images 0.1.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">Module code</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for test_singularity_builder</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot; Unittests for the singularity_builder and the __main__ module.</span>
+
+<span class="sd">This project is developed by using test driven design.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">unittest</span>
+<span class="kn">from</span> <span class="nn">unittest.mock</span> <span class="k">import</span> <span class="n">patch</span>
+<span class="kn">from</span> <span class="nn">subprocess</span> <span class="k">import</span> <span class="n">call</span>
+
+<span class="kn">from</span> <span class="nn">singularity_autobuild.__main__</span> <span class="k">import</span> <span class="n">arg_parser</span><span class="p">,</span> <span class="n">main</span>
+<span class="kn">from</span> <span class="nn">singularity_autobuild.singularity_builder</span> <span class="k">import</span> <span class="p">(</span>
+    <span class="n">Builder</span>
+    <span class="p">)</span>
+<span class="kn">from</span> <span class="nn">singularity_autobuild.autobuild_logger</span> <span class="k">import</span> <span class="n">get_stdout_logger</span>
+<span class="kn">from</span> <span class="nn">singularity_autobuild.test.configurator</span> <span class="k">import</span> <span class="n">configure_test_recipe</span>
+
+<span class="n">LOGGER</span> <span class="o">=</span> <span class="n">get_stdout_logger</span><span class="p">()</span>
+
+<span class="n">CONFIG</span> <span class="o">=</span> <span class="n">configure_test_recipe</span><span class="p">()</span>
+<span class="n">RECIPE_CONF</span> <span class="o">=</span> <span class="n">CONFIG</span><span class="p">[</span><span class="s1">&#39;TEST_RECIPE&#39;</span><span class="p">]</span>
+
+<span class="n">MODULE_DIR</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="vm">__file__</span><span class="p">))</span>
+<span class="n">COLLECTION</span> <span class="o">=</span> <span class="n">RECIPE_CONF</span><span class="p">[</span><span class="s1">&#39;collection_name&#39;</span><span class="p">]</span>
+<span class="n">CONTAINER</span> <span class="o">=</span> <span class="n">RECIPE_CONF</span><span class="p">[</span><span class="s1">&#39;container_name&#39;</span><span class="p">]</span>
+<span class="n">IMAGE</span> <span class="o">=</span> <span class="n">CONTAINER</span>
+<span class="n">VERSION</span> <span class="o">=</span> <span class="n">RECIPE_CONF</span><span class="p">[</span><span class="s1">&#39;version_string&#39;</span><span class="p">]</span>
+<span class="n">IMAGE_TYPE</span> <span class="o">=</span> <span class="n">RECIPE_CONF</span><span class="p">[</span><span class="s1">&#39;image_type&#39;</span><span class="p">]</span>
+<span class="n">RECIPE_FOLDER_PATH</span> <span class="o">=</span> <span class="n">RECIPE_CONF</span><span class="p">[</span><span class="s1">&#39;recipe_folder_path&#39;</span><span class="p">]</span>
+<span class="n">RECIPE_FILE_PATH</span> <span class="o">=</span> <span class="n">RECIPE_CONF</span><span class="p">[</span><span class="s1">&#39;recipe_file_path&#39;</span><span class="p">]</span>
+<span class="n">IMAGE_PATH</span> <span class="o">=</span> <span class="n">RECIPE_CONF</span><span class="p">[</span><span class="s1">&#39;image_path&#39;</span><span class="p">]</span>
+<span class="n">SREGISTRY_STR</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+
+<div class="viewcode-block" id="TestSingularityBuilder"><a class="viewcode-back" href="../tests/test_singulartiy_builder.html#test_singularity_builder.TestSingularityBuilder">[docs]</a><span class="k">class</span> <span class="nc">TestSingularityBuilder</span><span class="p">(</span><span class="n">unittest</span><span class="o">.</span><span class="n">TestCase</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Test the script used to build singularity images.&quot;&quot;&quot;</span>
+
+
+<div class="viewcode-block" id="TestSingularityBuilder.test__init__"><a class="viewcode-back" href="../tests/test_singulartiy_builder.html#test_singularity_builder.TestSingularityBuilder.test__init__">[docs]</a>    <span class="k">def</span> <span class="nf">test__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Test instantiation of Builder object.</span>
+
+<span class="sd">        * Builder should have specified arguments</span>
+<span class="sd">        * Builder should create specified attributes</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Object should have a default value for image type.</span>
+        <span class="n">_builder</span> <span class="o">=</span> <span class="n">Builder</span><span class="p">(</span><span class="n">recipe_path</span><span class="o">=</span><span class="n">RECIPE_FILE_PATH</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">_builder</span><span class="o">.</span><span class="n">image_type</span><span class="p">,</span> <span class="n">IMAGE_TYPE</span><span class="p">)</span>
+
+
+        <span class="c1"># Test if attributes where created in __init__ and have expected values</span>
+        <span class="n">_builder</span> <span class="o">=</span> <span class="n">Builder</span><span class="p">(</span>
+            <span class="n">recipe_path</span><span class="o">=</span><span class="n">RECIPE_FILE_PATH</span><span class="p">,</span>
+            <span class="n">image_type</span><span class="o">=</span><span class="n">IMAGE_TYPE</span>
+            <span class="p">)</span>
+
+        <span class="n">_expected_attributes</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s1">&#39;recipe_path&#39;</span><span class="p">:</span> <span class="n">RECIPE_FILE_PATH</span><span class="p">,</span>
+            <span class="s1">&#39;image_type&#39;</span><span class="p">:</span> <span class="n">IMAGE_TYPE</span><span class="p">,</span>
+            <span class="s1">&#39;build_folder&#39;</span><span class="p">:</span> <span class="n">RECIPE_FOLDER_PATH</span><span class="p">,</span>
+            <span class="s1">&#39;version&#39;</span><span class="p">:</span> <span class="n">VERSION</span><span class="p">,</span>
+            <span class="s1">&#39;image_name&#39;</span><span class="p">:</span> <span class="n">IMAGE</span>
+        <span class="p">}</span>
+        <span class="k">for</span> <span class="n">attribute</span> <span class="ow">in</span> <span class="n">_expected_attributes</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span>
+                <span class="nb">getattr</span><span class="p">(</span><span class="n">_builder</span><span class="p">,</span> <span class="n">attribute</span><span class="p">),</span>
+                <span class="n">_expected_attributes</span><span class="p">[</span><span class="n">attribute</span><span class="p">]</span>
+                <span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestSingularityBuilder.test__init__exception"><a class="viewcode-back" href="../tests/test_singulartiy_builder.html#test_singularity_builder.TestSingularityBuilder.test__init__exception">[docs]</a>    <span class="k">def</span> <span class="nf">test__init__exception</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Tests exceptions thrown at instantiation. &quot;&quot;&quot;</span>
+        <span class="c1"># Recipe path should be set.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">AttributeError</span><span class="p">,</span> <span class="n">callableObj</span><span class="o">=</span><span class="n">Builder</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestSingularityBuilder.test_build"><a class="viewcode-back" href="../tests/test_singulartiy_builder.html#test_singularity_builder.TestSingularityBuilder.test_build">[docs]</a>    <span class="k">def</span> <span class="nf">test_build</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Test building of the image.</span>
+
+<span class="sd">         * If return values of build() are as expected.</span>
+<span class="sd">         * If image File exists at the location specified in the build() return value.</span>
+<span class="sd">         * If the file has the expected file extension.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># What is the return value of the build function?</span>
+        <span class="n">_builder</span> <span class="o">=</span> <span class="n">Builder</span><span class="p">(</span>
+            <span class="n">recipe_path</span><span class="o">=</span><span class="n">RECIPE_FILE_PATH</span><span class="p">,</span>
+            <span class="n">image_type</span><span class="o">=</span><span class="n">VERSION</span>
+            <span class="p">)</span>
+        <span class="n">_response_keys</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;image_full_path&#39;</span><span class="p">,</span> <span class="s1">&#39;collection_name&#39;</span><span class="p">,</span> <span class="s1">&#39;image_version&#39;</span><span class="p">,</span> <span class="s1">&#39;container_name&#39;</span><span class="p">]</span>
+        <span class="n">_builder_response</span> <span class="o">=</span> <span class="n">_builder</span><span class="o">.</span><span class="n">build</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">_response_keys</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertIn</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">_builder_response</span><span class="p">)</span>
+        <span class="c1"># Is the image at the specified location?</span>
+        <span class="c1"># _message to make unittest error more verbose.</span>
+        <span class="n">_message</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;Image exists.&quot;</span><span class="p">,</span> <span class="s2">&quot;Image does not exist.&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span>
+            <span class="n">_message</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+            <span class="n">_message</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">_builder_response</span><span class="p">[</span><span class="s1">&#39;image_full_path&#39;</span><span class="p">])</span>
+            <span class="k">else</span> <span class="n">_message</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="p">)</span>
+        <span class="c1"># Is the image of the specified type?</span>
+        <span class="c1"># i.e. does the full path end correctly.</span>
+        <span class="n">_image_suffix</span> <span class="o">=</span> <span class="n">_builder_response</span><span class="p">[</span><span class="s1">&#39;image_full_path&#39;</span><span class="p">][</span>
+            <span class="o">-</span><span class="nb">len</span><span class="p">(</span><span class="n">VERSION</span><span class="p">):]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span>
+            <span class="n">VERSION</span><span class="p">,</span>
+            <span class="n">_image_suffix</span>
+            <span class="p">)</span>
+        <span class="c1"># Clean up</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">_builder_response</span><span class="p">[</span><span class="s1">&#39;image_full_path&#39;</span><span class="p">])</span></div>
+
+<div class="viewcode-block" id="TestSingularityBuilder.test_is_build"><a class="viewcode-back" href="../tests/test_singulartiy_builder.html#test_singularity_builder.TestSingularityBuilder.test_is_build">[docs]</a>    <span class="k">def</span> <span class="nf">test_is_build</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Test the instance function to check if image already exists. &quot;&quot;&quot;</span>
+        <span class="n">_builder</span> <span class="o">=</span> <span class="n">Builder</span><span class="p">(</span>
+            <span class="n">recipe_path</span><span class="o">=</span><span class="n">RECIPE_FILE_PATH</span><span class="p">,</span>
+            <span class="n">image_type</span><span class="o">=</span><span class="n">VERSION</span>
+            <span class="p">)</span>
+        <span class="c1"># Not Build yet</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertFalse</span><span class="p">(</span><span class="n">_builder</span><span class="o">.</span><span class="n">is_build</span><span class="p">())</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">_builder</span><span class="o">.</span><span class="n">build_status</span><span class="p">,</span> <span class="n">_builder</span><span class="o">.</span><span class="n">is_build</span><span class="p">())</span>
+        <span class="n">_builder_response</span> <span class="o">=</span> <span class="n">_builder</span><span class="o">.</span><span class="n">build</span><span class="p">()</span>
+        <span class="c1"># Build</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">_builder</span><span class="o">.</span><span class="n">is_build</span><span class="p">())</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">_builder</span><span class="o">.</span><span class="n">build_status</span><span class="p">,</span> <span class="n">_builder</span><span class="o">.</span><span class="n">is_build</span><span class="p">())</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">_builder_response</span><span class="p">[</span><span class="s1">&#39;image_full_path&#39;</span><span class="p">])</span>
+        <span class="c1"># Build removed</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertFalse</span><span class="p">(</span><span class="n">_builder</span><span class="o">.</span><span class="n">is_build</span><span class="p">())</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">_builder</span><span class="o">.</span><span class="n">build_status</span><span class="p">,</span> <span class="n">_builder</span><span class="o">.</span><span class="n">is_build</span><span class="p">())</span></div></div>
+
+
+<div class="viewcode-block" id="TestMain"><a class="viewcode-back" href="../tests/test_singulartiy_builder.html#test_singularity_builder.TestMain">[docs]</a><span class="k">class</span> <span class="nc">TestMain</span><span class="p">(</span><span class="n">unittest</span><span class="o">.</span><span class="n">TestCase</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Test the main Function and its helpers &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">setUp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">LOGGER</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Set Up Main Test.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">IMAGE_PATH</span><span class="p">):</span>
+            <span class="n">LOGGER</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Removing leftover image.&quot;</span><span class="p">)</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">IMAGE_PATH</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">search_path</span> <span class="o">=</span> <span class="n">MODULE_DIR</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bad_recipe_file_path</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">/</span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span>
+            <span class="n">RECIPE_FOLDER_PATH</span><span class="p">,</span>
+            <span class="s1">&#39;bad_recipe.1.0.recipe&#39;</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bad_recipe_file_path</span><span class="p">):</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bad_recipe_file_path</span><span class="p">)</span>
+
+<div class="viewcode-block" id="TestMain.test_main"><a class="viewcode-back" href="../tests/test_singulartiy_builder.html#test_singularity_builder.TestMain.test_main">[docs]</a>    <span class="k">def</span> <span class="nf">test_main</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Test the main function that enables execution from command line. &quot;&quot;&quot;</span>
+        <span class="n">LOGGER</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+            <span class="s2">&quot;Pushing test image </span><span class="si">%s</span><span class="s2">/</span><span class="si">%s</span><span class="s2">:</span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="n">COLLECTION</span><span class="p">,</span>
+            <span class="n">CONTAINER</span><span class="p">,</span>
+            <span class="n">VERSION</span>
+            <span class="p">)</span>
+        <span class="n">main</span><span class="p">(</span>
+            <span class="n">search_folder</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">search_path</span><span class="p">,</span>
+            <span class="n">image_type</span><span class="o">=</span><span class="s1">&#39;simg&#39;</span>
+            <span class="p">)</span>
+        <span class="c1"># Is the test image inside the sregistry?</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span>
+            <span class="n">call</span><span class="p">([</span>
+                <span class="s1">&#39;sregistry&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;search&#39;</span><span class="p">,</span>
+                <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">/</span><span class="si">%s</span><span class="s2">:</span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">COLLECTION</span><span class="p">,</span> <span class="n">CONTAINER</span><span class="p">,</span> <span class="n">VERSION</span><span class="p">)</span>
+                <span class="p">]),</span>
+            <span class="mi">0</span>
+        <span class="p">)</span>
+        <span class="c1"># Was the local image removed after the push?</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertFalse</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">IMAGE_PATH</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="TestMain.test_bad_recipe"><a class="viewcode-back" href="../tests/test_singulartiy_builder.html#test_singularity_builder.TestMain.test_bad_recipe">[docs]</a>    <span class="k">def</span> <span class="nf">test_bad_recipe</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Test if main can handle a &#39;bad&#39; recipe file. &quot;&quot;&quot;</span>
+        <span class="n">_bad_recipe_content</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="se">\n</span><span class="si">%s</span><span class="se">\n\n</span><span class="si">%s</span><span class="se">\n</span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span>
+            <span class="s2">&quot;Bootstrap: docker&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;FROM: alpine&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;%post&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;exit 1&quot;</span>
+        <span class="p">)</span>
+        <span class="n">LOGGER</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Creating faulty test recipe </span><span class="si">%s</span><span class="s2">.&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">bad_recipe_file_path</span><span class="p">)</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bad_recipe_file_path</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">bad_recipe</span><span class="p">:</span>
+            <span class="n">bad_recipe</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">_bad_recipe_content</span><span class="p">)</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">main</span><span class="p">(</span>
+                <span class="n">search_folder</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">search_path</span><span class="p">,</span>
+                <span class="n">image_type</span><span class="o">=</span><span class="s1">&#39;simg&#39;</span>
+                <span class="p">)</span>
+        <span class="k">except</span> <span class="ne">OSError</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">fail</span><span class="p">(</span><span class="s2">&quot;Erroneous recipe caused main() to fail.&quot;</span><span class="p">)</span></div>
+
+
+
+    <span class="k">def</span> <span class="nf">tearDown</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># Clean up registry and local</span>
+        <span class="n">LOGGER</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Deleting remote test image.&quot;</span><span class="p">)</span>
+        <span class="n">call</span><span class="p">([</span>
+            <span class="s1">&#39;sregistry&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;delete&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;-f&#39;</span><span class="p">,</span>
+            <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">/</span><span class="si">%s</span><span class="s2">:</span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">COLLECTION</span><span class="p">,</span> <span class="n">CONTAINER</span><span class="p">,</span> <span class="n">VERSION</span><span class="p">)</span>
+            <span class="p">])</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bad_recipe_file_path</span><span class="p">):</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bad_recipe_file_path</span><span class="p">)</span>
+
+<div class="viewcode-block" id="TestMain.test_arg_parser"><a class="viewcode-back" href="../tests/test_singulartiy_builder.html#test_singularity_builder.TestMain.test_arg_parser">[docs]</a>    <span class="k">def</span> <span class="nf">test_arg_parser</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Test the function to parse command line arguments. &quot;&quot;&quot;</span>
+        <span class="n">_image_type</span> <span class="o">=</span> <span class="s1">&#39;simg&#39;</span>
+        <span class="n">_args</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="s2">&quot;--path&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">search_path</span><span class="p">,</span> <span class="s2">&quot;--image_type&quot;</span><span class="p">,</span> <span class="n">_image_type</span><span class="p">]</span>
+        <span class="k">with</span> <span class="n">patch</span><span class="p">(</span><span class="s1">&#39;sys.argv&#39;</span><span class="p">,</span> <span class="n">_args</span><span class="p">):</span>
+            <span class="n">_response</span> <span class="o">=</span> <span class="n">arg_parser</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">_response</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">search_path</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">_response</span><span class="o">.</span><span class="n">image_type</span><span class="p">,</span> <span class="n">_image_type</span><span class="p">)</span>
+            <span class="n">_response</span> <span class="o">=</span> <span class="n">arg_parser</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">_response</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">search_path</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">_response</span><span class="o">.</span><span class="n">image_type</span><span class="p">,</span> <span class="n">_image_type</span><span class="p">)</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Singularity Images 0.1.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" >Module code</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2018, Dominique Hansen.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.9.
+    </div>
+  </body>
+</html>

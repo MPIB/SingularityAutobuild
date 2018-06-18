@@ -1,0 +1,172 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Unit Tests for Singularity Builder Class &#8212; Singularity Images 0.1.0 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="top" title="Singularity Images 0.1.0 documentation" href="../index.html" />
+    <link rel="prev" title="Unit Tests for the Image Recipe Tools module." href="test_image_recipe_tools.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="test_image_recipe_tools.html" title="Unit Tests for the Image Recipe Tools module."
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Singularity Images 0.1.0 documentation</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-test_singularity_builder">
+<span id="unit-tests-for-singularity-builder-class"></span><h1>Unit Tests for Singularity Builder Class<a class="headerlink" href="#module-test_singularity_builder" title="Permalink to this headline">¶</a></h1>
+<p>Unittests for the singularity_builder and the __main__ module.</p>
+<p>This project is developed by using test driven design.</p>
+<dl class="class">
+<dt id="test_singularity_builder.TestMain">
+<em class="property">class </em><code class="descclassname">test_singularity_builder.</code><code class="descname">TestMain</code><span class="sig-paren">(</span><em>methodName='runTest'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/test_singularity_builder.html#TestMain"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#test_singularity_builder.TestMain" title="Permalink to this definition">¶</a></dt>
+<dd><p>Test the main Function and its helpers</p>
+<dl class="method">
+<dt id="test_singularity_builder.TestMain.test_arg_parser">
+<code class="descname">test_arg_parser</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/test_singularity_builder.html#TestMain.test_arg_parser"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#test_singularity_builder.TestMain.test_arg_parser" title="Permalink to this definition">¶</a></dt>
+<dd><p>Test the function to parse command line arguments.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="test_singularity_builder.TestMain.test_bad_recipe">
+<code class="descname">test_bad_recipe</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/test_singularity_builder.html#TestMain.test_bad_recipe"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#test_singularity_builder.TestMain.test_bad_recipe" title="Permalink to this definition">¶</a></dt>
+<dd><p>Test if main can handle a &#8216;bad&#8217; recipe file.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="test_singularity_builder.TestMain.test_main">
+<code class="descname">test_main</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/test_singularity_builder.html#TestMain.test_main"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#test_singularity_builder.TestMain.test_main" title="Permalink to this definition">¶</a></dt>
+<dd><p>Test the main function that enables execution from command line.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="test_singularity_builder.TestSingularityBuilder">
+<em class="property">class </em><code class="descclassname">test_singularity_builder.</code><code class="descname">TestSingularityBuilder</code><span class="sig-paren">(</span><em>methodName='runTest'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/test_singularity_builder.html#TestSingularityBuilder"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#test_singularity_builder.TestSingularityBuilder" title="Permalink to this definition">¶</a></dt>
+<dd><p>Test the script used to build singularity images.</p>
+<dl class="method">
+<dt id="test_singularity_builder.TestSingularityBuilder.test__init__">
+<code class="descname">test__init__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/test_singularity_builder.html#TestSingularityBuilder.test__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#test_singularity_builder.TestSingularityBuilder.test__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Test instantiation of Builder object.</p>
+<ul class="simple">
+<li>Builder should have specified arguments</li>
+<li>Builder should create specified attributes</li>
+</ul>
+</dd></dl>
+
+<dl class="method">
+<dt id="test_singularity_builder.TestSingularityBuilder.test__init__exception">
+<code class="descname">test__init__exception</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/test_singularity_builder.html#TestSingularityBuilder.test__init__exception"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#test_singularity_builder.TestSingularityBuilder.test__init__exception" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tests exceptions thrown at instantiation.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="test_singularity_builder.TestSingularityBuilder.test_build">
+<code class="descname">test_build</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/test_singularity_builder.html#TestSingularityBuilder.test_build"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#test_singularity_builder.TestSingularityBuilder.test_build" title="Permalink to this definition">¶</a></dt>
+<dd><p>Test building of the image.</p>
+<ul class="simple">
+<li>If return values of build() are as expected.</li>
+<li>If image File exists at the location specified in the build() return value.</li>
+<li>If the file has the expected file extension.</li>
+</ul>
+</dd></dl>
+
+<dl class="method">
+<dt id="test_singularity_builder.TestSingularityBuilder.test_is_build">
+<code class="descname">test_is_build</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/test_singularity_builder.html#TestSingularityBuilder.test_is_build"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#test_singularity_builder.TestSingularityBuilder.test_is_build" title="Permalink to this definition">¶</a></dt>
+<dd><p>Test the instance function to check if image already exists.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="test_image_recipe_tools.html"
+                        title="previous chapter">Unit Tests for the Image Recipe Tools module.</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/tests/test_singulartiy_builder.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="test_image_recipe_tools.html" title="Unit Tests for the Image Recipe Tools module."
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Singularity Images 0.1.0 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2018, Dominique Hansen.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.9.
+    </div>
+  </body>
+</html>

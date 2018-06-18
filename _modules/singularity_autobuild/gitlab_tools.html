@@ -1,0 +1,310 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>singularity_autobuild.gitlab_tools &#8212; Singularity Images 0.1.0 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="top" title="Singularity Images 0.1.0 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">Singularity Images 0.1.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for singularity_autobuild.gitlab_tools</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot; Tools to work with the Gitlab v3 API.</span>
+
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span>  <span class="n">Optional</span>
+
+<span class="kn">import</span> <span class="nn">git</span>
+<span class="kn">import</span> <span class="nn">iso8601</span>
+<span class="kn">import</span> <span class="nn">requests</span>
+
+<div class="viewcode-block" id="GitLabPushEventInfo"><a class="viewcode-back" href="../../modules/singulartiy_builder.gitlab_tools.html#singularity_autobuild.gitlab_tools.GitLabPushEventInfo">[docs]</a><span class="k">class</span> <span class="nc">GitLabPushEventInfo</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Toolset and object to work with the GitLab API V3</span>
+
+<span class="sd">    Methods expect an already parsed API response</span>
+<span class="sd">    containing the events of a project.</span>
+<span class="sd">    The API used, should deliver a json list, filled with</span>
+<span class="sd">    json objects.</span>
+
+<span class="sd">    The __init__ takes a parsed Gitlab response and</span>
+<span class="sd">    the returned object is able to determine if a given file</span>
+<span class="sd">    was modified during the commits of the last push.</span>
+
+<span class="sd">    The is_modified() method returns True, if the file path,</span>
+<span class="sd">    given as input, leads to a file, that has been changed.</span>
+
+<span class="sd">    Example API-call that delivers expected response:</span>
+<span class="sd">     * :code:`GET {base_url}/api/v3/projects/{project_id}/events`</span>
+
+<span class="sd">    :cvar str PUSH_DATE_KEY:        Key value of a GitLab API response for the</span>
+<span class="sd">                                    creation date of a push.</span>
+<span class="sd">    :ivar git.Repo repo:            A git.Repo used to handle the repository</span>
+<span class="sd">                                    containing the recipes.</span>
+<span class="sd">    :ivar git.Commit from_commit:   The first commit of the newest push to</span>
+<span class="sd">                                    the GitLab remote repository. Determined through</span>
+<span class="sd">                                    the get_latest_push() method</span>
+<span class="sd">                                    using the git_lab_api_response response.</span>
+<span class="sd">    :ivar git.Commit to_commit:     The last commit of the newest push to</span>
+<span class="sd">                                    the GitLab remote repository. Determined through</span>
+<span class="sd">                                    the get_latest_push() method</span>
+<span class="sd">                                    using the git_lab_api_response response.</span>
+<span class="sd">    :ivar dict changed_files:       Dictionary with full paths to</span>
+<span class="sd">                                    all changed files as keys and their change</span>
+<span class="sd">                                    types as values. Determined by the</span>
+<span class="sd">                                    get_changed_files() method.</span>
+<span class="sd">    :param list git_lab_response:   A list of gitlab events obtained from a</span>
+<span class="sd">                                    GitLab v3 API.</span>
+<span class="sd">    :param str local_repo:          The path to the local git repo to work with.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">PUSH_DATE_KEY</span> <span class="o">=</span> <span class="s2">&quot;created_at&quot;</span>
+
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">git_lab_response</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span> <span class="n">local_repo</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="n">_latest_push</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_latest_push</span><span class="p">(</span><span class="n">git_lab_response</span><span class="p">)</span>
+        <span class="n">_from_commit_sha</span> <span class="o">=</span> <span class="n">_latest_push</span><span class="p">[</span><span class="s2">&quot;push_data&quot;</span><span class="p">][</span><span class="s2">&quot;commit_from&quot;</span><span class="p">]</span>
+        <span class="n">_to_commit_sha</span> <span class="o">=</span> <span class="n">_latest_push</span><span class="p">[</span><span class="s2">&quot;push_data&quot;</span><span class="p">][</span><span class="s2">&quot;commit_to&quot;</span><span class="p">]</span>
+        <span class="n">local_repo</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">local_repo</span><span class="p">)</span>
+        <span class="c1"># Test if Repo actually exists and is a directory</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">local_repo</span><span class="p">):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">local_repo</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> does not exist.&quot;</span> <span class="o">%</span> <span class="n">local_repo</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> is not a directory.&quot;</span> <span class="o">%</span> <span class="n">local_repo</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">repo</span> <span class="o">=</span> <span class="n">git</span><span class="o">.</span><span class="n">Repo</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="n">local_repo</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">from_commit</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">repo</span><span class="o">.</span><span class="n">commit</span><span class="p">(</span><span class="n">_from_commit_sha</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">to_commit</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">repo</span><span class="o">.</span><span class="n">commit</span><span class="p">(</span><span class="n">_to_commit_sha</span><span class="p">)</span>
+        <span class="n">local_repo</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">local_repo</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">changed_files</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_changed_files</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">repo</span><span class="p">,</span>
+            <span class="n">_from_commit_sha</span><span class="p">,</span>
+            <span class="n">_to_commit_sha</span>
+            <span class="p">)</span>
+        <span class="n">_second_to_last_commits</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">from_commit</span><span class="o">.</span><span class="n">parents</span>
+
+<div class="viewcode-block" id="GitLabPushEventInfo.is_modified_file"><a class="viewcode-back" href="../../modules/singulartiy_builder.gitlab_tools.html#singularity_autobuild.gitlab_tools.GitLabPushEventInfo.is_modified_file">[docs]</a>    <span class="k">def</span> <span class="nf">is_modified_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot; Gives truth value for a files modification status.</span>
+
+<span class="sd">        Cross references objects dictionary of files,</span>
+<span class="sd">        modified within commits pushed during the latest push,</span>
+<span class="sd">        with the input file path.</span>
+
+<span class="sd">        :param file_path:   Full path to the file, whose modification status</span>
+<span class="sd">                            is to be identified.</span>
+<span class="sd">        :returns:           Truth value for for a files modification status.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">_is_modified</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span>
+            <span class="n">file_path</span> <span class="ow">in</span> <span class="p">[</span><span class="n">file_path</span> <span class="k">for</span> <span class="n">file_path</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">changed_files</span><span class="p">]</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="n">_is_modified</span><span class="p">:</span>
+            <span class="n">_change_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">changed_files</span><span class="p">[</span><span class="n">file_path</span><span class="p">]</span>
+            <span class="n">_is_modified</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;[AMR].*&#39;</span><span class="p">,</span> <span class="n">_change_type</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">_is_modified</span></div>
+
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="GitLabPushEventInfo.get_changed_files"><a class="viewcode-back" href="../../modules/singulartiy_builder.gitlab_tools.html#singularity_autobuild.gitlab_tools.GitLabPushEventInfo.get_changed_files">[docs]</a>    <span class="k">def</span> <span class="nf">get_changed_files</span><span class="p">(</span>
+            <span class="bp">cls</span><span class="p">,</span>
+            <span class="n">repo</span><span class="p">:</span> <span class="n">git</span><span class="o">.</span><span class="n">Repo</span><span class="p">,</span>
+            <span class="n">begin_sha</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+            <span class="n">end_sha</span><span class="p">:</span> <span class="nb">str</span>
+        <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot; Return the files changed in a range of commits and their change type.</span>
+
+<span class="sd">        The dictionary of changed files is supposed to contain all files</span>
+<span class="sd">        changed in all commits between begin and end. This includes begin</span>
+<span class="sd">        and end commit. To get the files changed in the begin commit a diff</span>
+<span class="sd">        between the commit before the begin commit  and the end commit has to be</span>
+<span class="sd">        performed.</span>
+
+<span class="sd">        :param repo:        Repository object to work with.</span>
+<span class="sd">        :param begin_sha:   The hexsha of the first commit of the</span>
+<span class="sd">                            intervall. Has to be an earlier</span>
+<span class="sd">                            commit than end_sha.</span>
+<span class="sd">        :param end_sha:     The hexsha of the last commit of the</span>
+<span class="sd">                            intervall. Has to be a later commit than</span>
+<span class="sd">                            begin_sha.</span>
+<span class="sd">        :returns:           Dictionary with all changed files</span>
+<span class="sd">                            as keys and their change type as values.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">_changed_files</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">_diff_begin_commit</span> <span class="o">=</span> <span class="n">repo</span><span class="o">.</span><span class="n">commit</span><span class="p">(</span><span class="n">begin_sha</span><span class="p">)</span>
+        <span class="n">_diff_end_commit</span> <span class="o">=</span> <span class="n">repo</span><span class="o">.</span><span class="n">commit</span><span class="p">(</span><span class="n">end_sha</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">_diff_begin_commit</span><span class="o">.</span><span class="n">committed_datetime</span> <span class="o">&gt;</span> <span class="n">_diff_end_commit</span><span class="o">.</span><span class="n">committed_datetime</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Begin commit happened before the end commit&quot;</span><span class="p">)</span>
+
+        <span class="c1"># If we compare changes between the beginning and the end, we will not get</span>
+        <span class="c1"># the files changed in the first commit itself.</span>
+        <span class="c1"># The first commit has to be set one commit back to get all changed files.</span>
+
+        <span class="c1"># If begin_commit is the first commit of the repository,</span>
+        <span class="c1"># the git.Commit.parents ivar will be empty.</span>
+        <span class="c1"># We hav to treat the first commit differently, since it has</span>
+        <span class="c1"># no previous commit to compare changes from beginning to end.</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">_diff_begin_commit</span><span class="o">.</span><span class="n">parents</span><span class="p">:</span>
+            <span class="c1"># Since it is the first commit, files can only have been added.</span>
+            <span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="n">_diff_begin_commit</span><span class="p">:</span>
+                <span class="n">_changed_files</span><span class="p">[</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">file</span><span class="p">)]</span> <span class="o">=</span> <span class="s1">&#39;A&#39;</span>
+            <span class="c1"># git.Commit.parents returns a tuple,</span>
+            <span class="c1"># possibly to handle merges.</span>
+            <span class="c1"># So we expect to work with a tuple from here.</span>
+            <span class="n">_diff_begin_commit</span> <span class="o">=</span> <span class="p">(</span><span class="n">_diff_begin_commit</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Set the beginning to a commit earlier.</span>
+            <span class="c1"># (or commits {plural} if original commit is a merge)</span>
+            <span class="n">_diff_begin_commit</span> <span class="o">=</span> <span class="n">_diff_begin_commit</span><span class="o">.</span><span class="n">parents</span>
+
+        <span class="k">for</span> <span class="n">commit</span> <span class="ow">in</span> <span class="n">_diff_begin_commit</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="n">commit</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">_diff_end_commit</span><span class="p">):</span>
+                <span class="n">_changed_files</span><span class="p">[</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">file</span><span class="o">.</span><span class="n">a_path</span><span class="p">)]</span> <span class="o">=</span> <span class="n">file</span><span class="o">.</span><span class="n">change_type</span>
+
+        <span class="k">return</span> <span class="n">_changed_files</span></div>
+
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="GitLabPushEventInfo.get_latest_push"><a class="viewcode-back" href="../../modules/singulartiy_builder.gitlab_tools.html#singularity_autobuild.gitlab_tools.GitLabPushEventInfo.get_latest_push">[docs]</a>    <span class="k">def</span> <span class="nf">get_latest_push</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">git_lab_response</span><span class="p">:</span> <span class="nb">list</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot; Get the latest push data from a GitLab response.</span>
+
+<span class="sd">        Uses extract_push_data to make sure to work only with</span>
+<span class="sd">        push data.</span>
+
+<span class="sd">        :param git_lab_response: A list of dictionaries.</span>
+<span class="sd">                                 The dictionary is expected to conform to</span>
+<span class="sd">                                 a GitLab API V3 response containing the</span>
+<span class="sd">                                 events of a project.</span>
+<span class="sd">        :returns: A dictionary corresponding to the json object</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">git_lab_response</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">extract_push_data</span><span class="p">(</span><span class="n">git_lab_response</span><span class="p">)</span>
+        <span class="n">_push_dates</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">if</span> <span class="nb">bool</span><span class="p">(</span><span class="n">git_lab_response</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+        <span class="c1"># Extract the dates into a List</span>
+        <span class="k">for</span> <span class="n">push</span> <span class="ow">in</span> <span class="n">git_lab_response</span><span class="p">:</span>
+            <span class="n">_push_dates</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="n">iso8601</span><span class="o">.</span><span class="n">parse_date</span><span class="p">(</span>
+                    <span class="n">push</span><span class="p">[</span><span class="bp">cls</span><span class="o">.</span><span class="n">PUSH_DATE_KEY</span><span class="p">]</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+        <span class="c1"># Get latest date.</span>
+        <span class="n">_latest_date</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">_push_dates</span><span class="p">)</span>
+        <span class="c1"># Get latest dates index.</span>
+        <span class="n">_latest_push_index</span> <span class="o">=</span> <span class="n">_push_dates</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">_latest_date</span><span class="p">)</span>
+
+        <span class="c1"># Connect Push event and date with the dates index.</span>
+        <span class="k">return</span> <span class="n">git_lab_response</span><span class="p">[</span><span class="n">_latest_push_index</span><span class="p">]</span></div>
+
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="GitLabPushEventInfo.extract_push_data"><a class="viewcode-back" href="../../modules/singulartiy_builder.gitlab_tools.html#singularity_autobuild.gitlab_tools.GitLabPushEventInfo.extract_push_data">[docs]</a>    <span class="k">def</span> <span class="nf">extract_push_data</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">git_lab_response</span><span class="p">:</span> <span class="nb">list</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot; Filter gitlab response for push events.</span>
+
+<span class="sd">        :returns: A list of push event dictionaries.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">_response_list</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="c1"># A push event should have the Key push_data</span>
+        <span class="c1"># The corresponding value should be a dictionary</span>
+        <span class="c1"># The dictionary should have a key called action with</span>
+        <span class="c1"># the value pushed.</span>
+        <span class="k">for</span> <span class="n">event</span> <span class="ow">in</span> <span class="n">git_lab_response</span><span class="p">:</span>
+            <span class="k">if</span> <span class="s2">&quot;push_data&quot;</span> <span class="ow">in</span> <span class="n">event</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">event</span><span class="p">[</span><span class="s2">&quot;push_data&quot;</span><span class="p">][</span><span class="s2">&quot;action&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;pushed&quot;</span><span class="p">:</span>
+                    <span class="n">_response_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">event</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">_response_list</span></div></div>
+
+<div class="viewcode-block" id="call_gitlab_events_api"><a class="viewcode-back" href="../../modules/singulartiy_builder.gitlab_tools.html#singularity_autobuild.gitlab_tools.call_gitlab_events_api">[docs]</a><span class="k">def</span> <span class="nf">call_gitlab_events_api</span><span class="p">(</span><span class="n">api_url</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">api_key</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot; Call a gitlab API and return its response as list.</span>
+
+<span class="sd">    :params api_url: The full url for the api request.</span>
+<span class="sd">    :params api_key: The key for the API.</span>
+<span class="sd">    :returns:        The API response.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_header</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;PRIVATE-TOKEN&quot;</span><span class="p">:</span> <span class="n">api_key</span><span class="p">}</span>
+    <span class="n">_response</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">api_url</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="n">_header</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">_response</span><span class="o">.</span><span class="n">text</span><span class="p">)</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">Singularity Images 0.1.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2018, Dominique Hansen.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.9.
+    </div>
+  </body>
+</html>

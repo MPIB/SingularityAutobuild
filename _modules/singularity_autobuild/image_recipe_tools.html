@@ -1,0 +1,467 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>singularity_autobuild.image_recipe_tools &#8212; Singularity Images 0.1.0 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="top" title="Singularity Images 0.1.0 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">Singularity Images 0.1.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for singularity_autobuild.image_recipe_tools</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot; Module for miscellaneous modules to work with sregistry. &quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">glob</span>
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">import</span> <span class="nn">subprocess</span>
+<span class="kn">from</span> <span class="nn">subprocess</span> <span class="k">import</span> <span class="n">call</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Generator</span>
+<span class="kn">from</span> <span class="nn">singularity_autobuild.autobuild_logger</span> <span class="k">import</span> <span class="n">get_stdout_logger</span>
+
+<span class="n">LOGGER</span> <span class="o">=</span> <span class="n">get_stdout_logger</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="vm">__name__</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="s1">&#39;INFO&#39;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="image_in_sregistry"><a class="viewcode-back" href="../../modules/singulartiy_builder.image_recipe_tools.html#singularity_autobuild.image_recipe_tools.image_in_sregistry">[docs]</a><span class="k">def</span> <span class="nf">image_in_sregistry</span><span class="p">(</span>
+        <span class="n">collection</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">version</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">image</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot; Returns true if image of version exists in collection.</span>
+
+<span class="sd">    Calls sregistry search and parses its output to</span>
+<span class="sd">    determin if a specific container is already stored</span>
+<span class="sd">    in the sregistry.</span>
+<span class="sd">    :param collection: The name of the images/containers collection.</span>
+<span class="sd">    :param version:    The version of the container.</span>
+<span class="sd">    :param image:      The name of the container.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">_exit_status</span> <span class="o">=</span> <span class="n">call</span><span class="p">([</span>
+        <span class="s1">&#39;sregistry&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;search&#39;</span><span class="p">,</span>
+        <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">/</span><span class="si">%s</span><span class="s2">:</span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">collection</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">version</span><span class="p">)</span>
+    <span class="p">])</span>
+
+    <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="n">_exit_status</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="recipe_finder"><a class="viewcode-back" href="../../modules/singulartiy_builder.image_recipe_tools.html#singularity_autobuild.image_recipe_tools.recipe_finder">[docs]</a><span class="k">def</span> <span class="nf">recipe_finder</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;./&#39;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Generator</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot; Find recipe files given a root search directory.</span>
+
+<span class="sd">    Recipes need to have the suffix .recipe</span>
+
+<span class="sd">    :param path: Path of the search root.</span>
+<span class="sd">                 The path will be made into an</span>
+<span class="sd">                 absolute path if it is relative.</span>
+<span class="sd">    :returns:    The absolute paths to</span>
+<span class="sd">                 found recipes.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_search_root</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">_search_root</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">OSError</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> is no directory&quot;</span> <span class="o">%</span> <span class="n">_search_root</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">recipe</span> <span class="ow">in</span> <span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1">/**/*.recipe&#39;</span> <span class="o">%</span> <span class="n">_search_root</span><span class="p">,</span> <span class="n">recursive</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="k">yield</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">recipe</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="image_pusher"><a class="viewcode-back" href="../../modules/singulartiy_builder.image_recipe_tools.html#singularity_autobuild.image_recipe_tools.image_pusher">[docs]</a><span class="k">def</span> <span class="nf">image_pusher</span><span class="p">(</span>
+        <span class="n">image_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">collection</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">version</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">image</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">retry_threshold</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">20</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot; Upload image to an sregistry.</span>
+
+<span class="sd">    Calls `sregistry push` with `subprocess.Popen` to upload an existing image to an sregistry.</span>
+
+
+<span class="sd">    :param image_path:       Path to the image file</span>
+<span class="sd">    :param collection:       Name of the collection to upload to.</span>
+<span class="sd">    :param version:          Version of the image.</span>
+<span class="sd">    :param image:            Name of the image to be used by the sregistry.</span>
+<span class="sd">    :param retry_threshold:  How often should the upload retried if it fails.</span>
+<span class="sd">                             Note: Sregistry showed problems with accepting</span>
+<span class="sd">                             post requests. This parameter might become obsolete</span>
+<span class="sd">                             when this is no longer an issue.</span>
+<span class="sd">    :returns:           The success status of the upload.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Ensure expected behavior of sregistry-cli</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&quot;SREGISTRY_CLIENT&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;registry&#39;</span>
+
+    <span class="k">for</span> <span class="n">retry</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">retry_threshold</span><span class="p">):</span>
+        <span class="n">_process</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">Popen</span><span class="p">(</span>
+            <span class="p">[</span>
+                <span class="s1">&#39;sregistry&#39;</span><span class="p">,</span> <span class="s1">&#39;push&#39;</span><span class="p">,</span>
+                <span class="s2">&quot;--name&quot;</span><span class="p">,</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">/</span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">collection</span><span class="p">,</span> <span class="n">image</span><span class="p">),</span>
+                <span class="s2">&quot;--tag&quot;</span><span class="p">,</span> <span class="n">version</span><span class="p">,</span>
+                <span class="n">image_path</span>
+            <span class="p">],</span>
+            <span class="n">stdout</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">PIPE</span><span class="p">,</span>
+            <span class="n">stderr</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">PIPE</span>
+            <span class="p">)</span>
+        <span class="n">_process_return</span> <span class="o">=</span> <span class="n">_process</span><span class="o">.</span><span class="n">communicate</span><span class="p">()</span>
+        <span class="k">if</span> <span class="s1">&#39;Return status 201 Created&#39;</span> <span class="ow">in</span> <span class="nb">str</span><span class="p">(</span><span class="n">_process_return</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+            <span class="n">LOGGER</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">                Upload successfull for:</span>
+<span class="sd">                collection: %s</span>
+<span class="sd">                image:      %s</span>
+<span class="sd">                version:    %s</span>
+<span class="sd">                &quot;&quot;&quot;</span><span class="p">,</span>
+                <span class="n">image</span><span class="p">,</span>
+                <span class="n">collection</span><span class="p">,</span>
+                <span class="n">version</span>
+            <span class="p">)</span>
+            <span class="k">break</span>
+        <span class="k">elif</span> <span class="n">retry</span> <span class="o">==</span> <span class="n">retry_threshold</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">LOGGER</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">                Upload failed for:</span>
+<span class="sd">                collection: %s</span>
+<span class="sd">                image:      %s</span>
+<span class="sd">                version:    %s</span>
+<span class="sd">                &quot;&quot;&quot;</span><span class="p">,</span>
+                <span class="n">image</span><span class="p">,</span>
+                <span class="n">collection</span><span class="p">,</span>
+                <span class="n">version</span>
+            <span class="p">)</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">LOGGER</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Upload failed. Retrying&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="kc">True</span></div>
+
+<div class="viewcode-block" id="get_collection_from_recipe_path"><a class="viewcode-back" href="../../modules/singulartiy_builder.image_recipe_tools.html#singularity_autobuild.image_recipe_tools.get_collection_from_recipe_path">[docs]</a><span class="k">def</span> <span class="nf">get_collection_from_recipe_path</span><span class="p">(</span><span class="n">recipe_file_full_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot; Returns the collection of the image to be produced by a recipe file . &quot;&quot;&quot;</span>
+    <span class="n">_folder_full_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">recipe_file_full_path</span><span class="p">)</span>
+    <span class="n">_out_string</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">_folder_full_path</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">_out_string</span></div>
+
+<div class="viewcode-block" id="get_version_from_recipe"><a class="viewcode-back" href="../../modules/singulartiy_builder.image_recipe_tools.html#singularity_autobuild.image_recipe_tools.get_version_from_recipe">[docs]</a><span class="k">def</span> <span class="nf">get_version_from_recipe</span><span class="p">(</span><span class="n">recipe_file_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot; Returns the image version contained in a recipe file name. &quot;&quot;&quot;</span>
+    <span class="c1"># Can we find a version part between . characters in the filename?</span>
+    <span class="k">if</span> <span class="n">re</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;\..+?\.&#39;</span><span class="p">,</span> <span class="n">recipe_file_name</span><span class="p">):</span>
+        <span class="c1"># Match everything from the first literal . to the last . as Version.</span>
+        <span class="k">return</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;^.*?\.(.+)\.recipe$&#39;</span><span class="p">,</span> <span class="sa">r</span><span class="s1">&#39;\1&#39;</span><span class="p">,</span> <span class="n">recipe_file_name</span><span class="p">)</span>
+    <span class="c1"># No version in the Filename, use &#39;latest&#39; as version.</span>
+    <span class="k">return</span> <span class="s1">&#39;latest&#39;</span></div>
+
+<div class="viewcode-block" id="get_image_name_from_recipe"><a class="viewcode-back" href="../../modules/singulartiy_builder.image_recipe_tools.html#singularity_autobuild.image_recipe_tools.get_image_name_from_recipe">[docs]</a><span class="k">def</span> <span class="nf">get_image_name_from_recipe</span><span class="p">(</span><span class="n">recipe_file_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot; Returns the image name contained in a recipe file name. &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;(^.*?)\..*$&#39;</span><span class="p">,</span> <span class="sa">r</span><span class="s1">&#39;\1&#39;</span><span class="p">,</span> <span class="n">recipe_file_name</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="get_dependency_from_recipe"><a class="viewcode-back" href="../../modules/singulartiy_builder.image_recipe_tools.html#singularity_autobuild.image_recipe_tools.get_dependency_from_recipe">[docs]</a><span class="k">def</span> <span class="nf">get_dependency_from_recipe</span><span class="p">(</span><span class="n">recipe_file_full_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot; Reads a recipe file and returns its Bootstrap and From values.</span>
+
+<span class="sd">    :returns: A dict with a key equal to the recipes Bootstrap method and</span>
+<span class="sd">              the value of this key being the value of its From value.</span>
+<span class="sd">    :raises: UserWarning</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_bootstrap</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+    <span class="n">_from</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+    <span class="n">_bootstrap_regex</span> <span class="o">=</span> <span class="sa">r</span><span class="s1">&#39;^bootstrap:\s(.*?)$&#39;</span>
+    <span class="n">_from_regex</span> <span class="o">=</span> <span class="sa">r</span><span class="s1">&#39;^from:\s(.*?)$&#39;</span>
+
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">recipe_file_full_path</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">recipe</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">recipe</span><span class="p">:</span>
+            <span class="n">line</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">_bootstrap_regex</span><span class="p">,</span> <span class="n">line</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">IGNORECASE</span><span class="p">):</span>
+                <span class="n">_bootstrap</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="n">_bootstrap_regex</span><span class="p">,</span> <span class="sa">r</span><span class="s1">&#39;\1&#39;</span><span class="p">,</span> <span class="n">line</span><span class="p">,</span> <span class="n">flags</span><span class="o">=</span><span class="n">re</span><span class="o">.</span><span class="n">IGNORECASE</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">_from_regex</span><span class="p">,</span> <span class="n">line</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">IGNORECASE</span><span class="p">):</span>
+                <span class="n">_from</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="n">_from_regex</span><span class="p">,</span> <span class="sa">r</span><span class="s1">&#39;\1&#39;</span><span class="p">,</span> <span class="n">line</span><span class="p">,</span> <span class="n">flags</span><span class="o">=</span><span class="n">re</span><span class="o">.</span><span class="n">IGNORECASE</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">_bootstrap</span> <span class="ow">and</span> <span class="n">_from</span><span class="p">:</span>
+                <span class="k">break</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">_bootstrap</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">_from</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">UserWarning</span><span class="p">(</span><span class="s1">&#39;Recipe at </span><span class="si">%s</span><span class="s1"> is invalid&#39;</span> <span class="o">%</span> <span class="n">recipe_file_full_path</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">{</span><span class="n">_bootstrap</span><span class="p">:</span> <span class="n">_from</span><span class="p">}</span></div>
+
+<div class="viewcode-block" id="get_path_from_dependency"><a class="viewcode-back" href="../../modules/singulartiy_builder.image_recipe_tools.html#singularity_autobuild.image_recipe_tools.get_path_from_dependency">[docs]</a><span class="k">def</span> <span class="nf">get_path_from_dependency</span><span class="p">(</span>
+        <span class="n">recipe_dependency_value</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">recipe_base_folder_path</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot; Searches the base folder for a file, that corresponse to the dependency passed.</span>
+
+<span class="sd">    :param recipe_dependency_value: Value of the &quot;From:&quot; section from a</span>
+<span class="sd">                                    recipe file, used by singularity</span>
+<span class="sd">                                    to find the base image.</span>
+<span class="sd">    :param recipe_base_folder_path: Full path of the base folder,</span>
+<span class="sd">                                    containing all recipes.</span>
+<span class="sd">    :returns:                       Full path to the parent recipe or</span>
+<span class="sd">                                    an empty string &#39;&#39; if it is not a local</span>
+<span class="sd">                                    dependency.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">is_own_dependency</span><span class="p">(</span><span class="n">recipe_dependency_value</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s1">&#39;&#39;</span>
+
+    <span class="n">_dependency_value_regex</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span>
+        <span class="sa">r</span><span class="s1">&#39;^(?:.*?\/)?&#39;</span>   <span class="c1"># Match possible host address and ignore it</span>
+        <span class="sa">r</span><span class="s1">&#39;(?P&lt;collection&gt;.+?)\/&#39;</span>       <span class="c1"># Match collection</span>
+        <span class="sa">r</span><span class="s1">&#39;(?P&lt;container&gt;.+?)&#39;</span>         <span class="c1"># Match container/image name</span>
+        <span class="sa">r</span><span class="s1">&#39;(?::(?P&lt;version&gt;.*?))?$&#39;</span>  <span class="c1"># Match possible version Tag</span>
+        <span class="p">)</span>
+    <span class="n">_filename_components</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">_dependency_value_regex</span><span class="p">,</span> <span class="n">recipe_dependency_value</span><span class="p">)</span>
+    <span class="n">_glob_dict</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;basepath&#39;</span><span class="p">:</span> <span class="n">recipe_base_folder_path</span><span class="p">}</span>
+    <span class="n">_glob_dict</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">_filename_components</span><span class="o">.</span><span class="n">groupdict</span><span class="p">())</span>
+
+    <span class="n">_glob_string</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+
+    <span class="c1"># lastest tag translates to a filename without</span>
+    <span class="k">if</span> <span class="s1">&#39;version&#39;</span> <span class="ow">in</span> <span class="n">_glob_dict</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">_glob_dict</span><span class="p">[</span><span class="s1">&#39;version&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;latest&#39;</span><span class="p">:</span>
+            <span class="n">_glob_dict</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;version&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="s2">&quot;version&quot;</span> <span class="ow">in</span> <span class="n">_glob_dict</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">_glob_dict</span> <span class="o">!=</span> <span class="s1">&#39;latest&#39;</span><span class="p">:</span>
+            <span class="n">_glob_string</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="s1">&#39;</span><span class="si">{basepath}</span><span class="s1">/**/</span><span class="si">{collection}</span><span class="s1">/</span><span class="si">{container}</span><span class="s1">.</span><span class="si">{version}</span><span class="s1">.recipe&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="o">**</span><span class="n">_glob_dict</span><span class="p">)</span>
+            <span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">_glob_string</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="s1">&#39;</span><span class="si">{basepath}</span><span class="s1">/**/</span><span class="si">{collection}</span><span class="s1">/</span><span class="si">{container}</span><span class="s1">.recipe&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="o">**</span><span class="n">_glob_dict</span><span class="p">)</span>
+        <span class="p">)</span>
+
+    <span class="c1"># Find corresponding Files</span>
+    <span class="n">_glob_results</span> <span class="o">=</span> <span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span>
+        <span class="n">_glob_string</span><span class="p">,</span>
+        <span class="n">recursive</span><span class="o">=</span><span class="kc">True</span>
+    <span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">_glob_results</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+            <span class="p">(</span>
+                <span class="s2">&quot;The naming schema of recipe </span><span class="si">{}</span><span class="s2"> clashes with. &quot;</span>
+                <span class="s2">&quot;They cannot both exist in one sregistry.&quot;</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">_glob_results</span><span class="p">))</span>
+        <span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">_glob_results</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+            <span class="s2">&quot;Unresolved dependency on </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="n">recipe_dependency_value</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="n">_glob_results</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="is_own_dependency"><a class="viewcode-back" href="../../modules/singulartiy_builder.image_recipe_tools.html#singularity_autobuild.image_recipe_tools.is_own_dependency">[docs]</a><span class="k">def</span> <span class="nf">is_own_dependency</span><span class="p">(</span><span class="n">recipe_dependency_value</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot; Returns True if the dependency links to the sregistry used to push images to.</span>
+
+<span class="sd">    Needs the env variable SREGISTRY_HOSTNAME to be set.</span>
+<span class="sd">    This variable is also needed for the .sregistry file setup.</span>
+
+<span class="sd">    :param recipe_dependency_value: Value from a recipes &quot;From:&quot; section declaring the base Image.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_sregistry_host_name_raw</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s1">&#39;SREGISTRY_HOSTNAME&#39;</span><span class="p">]</span>
+    <span class="n">_sregistry_host_name</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;^http[s]?:\/\/(.*)$&#39;</span><span class="p">,</span> <span class="sa">r</span><span class="s1">&#39;\1&#39;</span><span class="p">,</span> <span class="n">_sregistry_host_name_raw</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">_sregistry_host_name</span> <span class="ow">in</span> <span class="n">recipe_dependency_value</span></div>
+
+
+<div class="viewcode-block" id="dependency_resolver"><a class="viewcode-back" href="../../modules/singulartiy_builder.image_recipe_tools.html#singularity_autobuild.image_recipe_tools.dependency_resolver">[docs]</a><span class="k">def</span> <span class="nf">dependency_resolver</span><span class="p">(</span><span class="n">recipe_file_paths</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span> <span class="n">recipe_base_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot; Sorts a list of recipe file paths based on their base image dependency.</span>
+
+<span class="sd">    Sorts the list in a way, that all recipes with dependencies linking</span>
+<span class="sd">    outside the local storage are sorted to the beginning.</span>
+<span class="sd">    All other recipes that follow those recipes are sorted, that</span>
+<span class="sd">    recipe with a child dependency, is always sorted behind its parent</span>
+<span class="sd">    in the list.</span>
+
+<span class="sd">    Since a recipe can only depend on one base image, it is sufficient,</span>
+<span class="sd">    that this base image is in front of the child image during the building</span>
+<span class="sd">    process.</span>
+
+<span class="sd">    :param recipe_file_paths: List of paths to recipe files.</span>
+<span class="sd">    :param recipe_base_path:  Path to the base folder containing all recipe files.</span>
+<span class="sd">    :returns:                 List of recipe paths sorted by their dependency.</span>
+<span class="sd">                              With Parents sorted before their children.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Does the list of recipes make sense?</span>
+    <span class="c1"># Does it create duplicate containers?</span>
+    <span class="n">recipe_list_sanity_check</span><span class="p">(</span><span class="n">recipe_file_paths</span><span class="o">=</span><span class="n">recipe_file_paths</span><span class="p">)</span>
+
+    <span class="n">_dependency_dict</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">recipe</span> <span class="ow">in</span> <span class="n">recipe_file_paths</span><span class="p">:</span>
+        <span class="n">dependency_drill_down</span><span class="p">(</span>
+            <span class="n">dependency_dict</span><span class="o">=</span><span class="n">_dependency_dict</span><span class="p">,</span>
+            <span class="n">recipe_path</span><span class="o">=</span><span class="n">recipe</span><span class="p">,</span>
+            <span class="n">recipe_base_path</span><span class="o">=</span><span class="n">recipe_base_path</span>
+        <span class="p">)</span>
+    <span class="n">_sorted_output_list</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">_dependency_dict</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="n">_dependency_dict</span><span class="o">.</span><span class="fm">__getitem__</span><span class="p">)</span>
+    <span class="n">_dependency_dict</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">return</span> <span class="n">_sorted_output_list</span></div>
+
+<div class="viewcode-block" id="dependency_drill_down"><a class="viewcode-back" href="../../modules/singulartiy_builder.image_recipe_tools.html#singularity_autobuild.image_recipe_tools.dependency_drill_down">[docs]</a><span class="k">def</span> <span class="nf">dependency_drill_down</span><span class="p">(</span>
+        <span class="n">dependency_dict</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span>
+        <span class="n">recipe_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">recipe_base_path</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot; Recursively drills down a dependency chain.</span>
+
+<span class="sd">    The dependency dict is passed as reference through all recursive functions calls.</span>
+<span class="sd">    It functions as a cache for already known results and as the expected result.</span>
+<span class="sd">    It is however not returned.</span>
+
+<span class="sd">    Sets a dependency as 0, if it does not depend on container from</span>
+<span class="sd">    the private sregistry. If a child of a recipe is found, this number</span>
+<span class="sd">    is incremented by one.</span>
+
+<span class="sd">    Example:</span>
+
+<span class="sd">    .. code-block:: python</span>
+
+<span class="sd">                            {</span>
+<span class="sd">                                &#39;/path/to/Parent.recipe&#39;: 0,</span>
+<span class="sd">                                &#39;/path/to/child.recipe&#39;: 1,</span>
+<span class="sd">                                &#39;/path/to/child_of_child.recipe&#39;: 2</span>
+<span class="sd">                            }</span>
+
+<span class="sd">    :param dependency_dict: Contains already known dependencies.</span>
+<span class="sd">                            The dictionary is directly modified</span>
+<span class="sd">                            and only passed as reference not as copy.</span>
+<span class="sd">                            It functions both as a cache and as the final</span>
+<span class="sd">                            result of the function.</span>
+<span class="sd">    :param child_key:       Path to the recipe whose dependency</span>
+<span class="sd">                            is calculated.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Dependency value already known</span>
+    <span class="k">if</span> <span class="n">recipe_path</span> <span class="ow">in</span> <span class="n">dependency_dict</span><span class="p">:</span>
+        <span class="k">return</span>
+
+    <span class="c1"># End of the dependency chain</span>
+    <span class="n">_this_dependency_dict</span> <span class="o">=</span> <span class="n">get_dependency_from_recipe</span><span class="p">(</span><span class="n">recipe_path</span><span class="p">)</span>
+    <span class="c1"># The recipe cannot depend on a private base image if</span>
+    <span class="c1"># the recipe is not build from a shub base image</span>
+    <span class="k">if</span> <span class="s1">&#39;shub&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">_this_dependency_dict</span><span class="p">:</span>
+        <span class="n">dependency_dict</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="n">recipe_path</span><span class="p">:</span> <span class="mi">0</span><span class="p">})</span>
+        <span class="k">return</span>
+
+    <span class="c1"># The recipe cannot depend on a private base image if</span>
+    <span class="c1"># does not reference a private shub image.</span>
+    <span class="n">_this_dependency</span> <span class="o">=</span> <span class="n">_this_dependency_dict</span><span class="p">[</span><span class="s1">&#39;shub&#39;</span><span class="p">]</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">is_own_dependency</span><span class="p">(</span><span class="n">_this_dependency</span><span class="p">):</span>
+        <span class="n">dependency_dict</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="n">recipe_path</span><span class="p">:</span> <span class="mi">0</span><span class="p">})</span>
+        <span class="k">return</span>
+
+    <span class="c1"># The recipe depends on an image in the private,</span>
+    <span class="c1"># sregistry, what is the dependency value of its parent?</span>
+    <span class="n">_parent_file_path</span> <span class="o">=</span> <span class="n">get_path_from_dependency</span><span class="p">(</span>
+        <span class="n">_this_dependency</span><span class="p">,</span> <span class="n">recipe_base_path</span><span class="p">)</span>
+    <span class="n">dependency_drill_down</span><span class="p">(</span>
+        <span class="n">dependency_dict</span><span class="o">=</span><span class="n">dependency_dict</span><span class="p">,</span>
+        <span class="n">recipe_path</span><span class="o">=</span><span class="n">_parent_file_path</span><span class="p">,</span>
+        <span class="n">recipe_base_path</span><span class="o">=</span><span class="n">recipe_base_path</span>
+    <span class="p">)</span>
+    <span class="c1"># Give this recipe the dependency of its Parent incremented by one.</span>
+    <span class="n">dependency_dict</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
+        <span class="p">{</span><span class="n">recipe_path</span><span class="p">:</span> <span class="n">dependency_dict</span><span class="p">[</span><span class="n">_parent_file_path</span><span class="p">]</span><span class="o">+</span><span class="mi">1</span><span class="p">}</span>
+    <span class="p">)</span>
+    <span class="k">return</span></div>
+
+<div class="viewcode-block" id="recipe_list_sanity_check"><a class="viewcode-back" href="../../modules/singulartiy_builder.image_recipe_tools.html#singularity_autobuild.image_recipe_tools.recipe_list_sanity_check">[docs]</a><span class="k">def</span> <span class="nf">recipe_list_sanity_check</span><span class="p">(</span><span class="n">recipe_file_paths</span><span class="p">:</span> <span class="nb">list</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot; Checks a list of recipe file paths for recipes creating duplicates.</span>
+
+<span class="sd">    Raises an exception if at least two recipes are found in the passed list,</span>
+<span class="sd">    that would be uploaded to the same collection, with the same name, and the same</span>
+<span class="sd">    version.</span>
+
+<span class="sd">    :param recipe_file_paths: A list of full paths to recipe files.</span>
+<span class="sd">    :raises: RuntimeError</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_uniqueness_counter</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="n">_image_full_name</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+    <span class="n">_recipe_name</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+    <span class="k">for</span> <span class="n">recipe</span> <span class="ow">in</span> <span class="n">recipe_file_paths</span><span class="p">:</span>
+        <span class="n">_recipe_name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">recipe</span><span class="p">)</span>
+        <span class="n">_image_full_name</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">/</span><span class="si">%s</span><span class="s2">:</span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span>
+            <span class="n">get_collection_from_recipe_path</span><span class="p">(</span><span class="n">recipe</span><span class="p">),</span>
+            <span class="n">get_image_name_from_recipe</span><span class="p">(</span><span class="n">_recipe_name</span><span class="p">),</span>
+            <span class="n">get_version_from_recipe</span><span class="p">(</span><span class="n">_recipe_name</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">_image_full_name</span> <span class="ow">not</span> <span class="ow">in</span>  <span class="n">_uniqueness_counter</span><span class="p">:</span>
+            <span class="n">_uniqueness_counter</span><span class="p">[</span><span class="n">_image_full_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">recipe</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                <span class="p">(</span><span class="s2">&quot;The naming schema of recipe </span><span class="si">%s</span><span class="s2"> clashes with </span><span class="si">%s</span><span class="s2">. &quot;</span>
+                 <span class="s2">&quot;They cannot both exist in one sregistry.&quot;</span><span class="p">)</span> <span class="o">%</span> <span class="p">(</span>
+                     <span class="n">_uniqueness_counter</span><span class="p">[</span><span class="n">_image_full_name</span><span class="p">],</span>
+                     <span class="n">recipe</span>
+                     <span class="p">)</span>
+            <span class="p">)</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">Singularity Images 0.1.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2018, Dominique Hansen.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.9.
+    </div>
+  </body>
+</html>

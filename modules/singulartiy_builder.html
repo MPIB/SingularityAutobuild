@@ -1,0 +1,176 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Singularity Builder’s __main__ &#8212; Singularity Images 0.1.0 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="top" title="Singularity Images 0.1.0 documentation" href="../index.html" />
+    <link rel="next" title="GitLab Tools" href="singulartiy_builder.gitlab_tools.html" />
+    <link rel="prev" title="Singularity Builder’s documentation" href="../index.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="singulartiy_builder.gitlab_tools.html" title="GitLab Tools"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="../index.html" title="Singularity Builder’s documentation"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Singularity Images 0.1.0 documentation</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-singularity_autobuild.__main__">
+<span id="singularity-builder-s-main"></span><h1>Singularity Builder&#8217;s __main__<a class="headerlink" href="#module-singularity_autobuild.__main__" title="Permalink to this headline">¶</a></h1>
+<p>Main Module to make the builder directly executable through cli.</p>
+<p>This __main__ module contains function arg_parser(),
+parsing command line options and
+function main(), controlling the applications flow.</p>
+<p>Command line Options are:</p>
+<blockquote>
+<div><table class="docutils option-list" frame="void" rules="none">
+<col class="option" />
+<col class="description" />
+<tbody valign="top">
+<tr><td class="option-group">
+<kbd><span class="option">--path</span></kbd></td>
+<td>Full path to the base folder, containing all recipe files
+to be build.</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">--image_type</span></kbd></td>
+<td>Image type, in the form of types suffix,
+of the images to be build.</td></tr>
+</tbody>
+</table>
+</div></blockquote>
+<p>scrolls</p>
+<dl class="function">
+<dt id="singularity_autobuild.__main__.arg_parser">
+<code class="descclassname">singularity_autobuild.__main__.</code><code class="descname">arg_parser</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/singularity_autobuild/__main__.html#arg_parser"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#singularity_autobuild.__main__.arg_parser" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reads command line arguments.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><code class="xref py py-class docutils literal"><span class="pre">Namespace</span></code></td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Values of accepted command line arguments.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="singularity_autobuild.__main__.main">
+<code class="descclassname">singularity_autobuild.__main__.</code><code class="descname">main</code><span class="sig-paren">(</span><em>search_folder=None</em>, <em>image_type='simg'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/singularity_autobuild/__main__.html#main"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#singularity_autobuild.__main__.main" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function to tie the functionality of this module together.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>search_folder</strong> (<code class="xref py py-data docutils literal"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal"><span class="pre">str</span></code>]) &#8211; The base folder for <code class="xref py py-func docutils literal"><span class="pre">image_recipe_tools.recipe_finder()</span></code>
+to search through.</li>
+<li><strong>image_type</strong> (<code class="xref py py-class docutils literal"><span class="pre">str</span></code>) &#8211; The image type to be passed to <code class="xref py py-class docutils literal"><span class="pre">singularity_builder.Builder</span></code>
+constructor and to be created by
+<code class="xref py py-meth docutils literal"><span class="pre">singularity_builder.Builder.build()</span></code>.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="../index.html"
+                        title="previous chapter">Singularity Builder&#8217;s documentation</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="singulartiy_builder.gitlab_tools.html"
+                        title="next chapter">GitLab Tools</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/modules/singulartiy_builder.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="singulartiy_builder.gitlab_tools.html" title="GitLab Tools"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="../index.html" title="Singularity Builder’s documentation"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Singularity Images 0.1.0 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2018, Dominique Hansen.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.9.
+    </div>
+  </body>
+</html>

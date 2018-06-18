@@ -24,12 +24,31 @@ class GitLabPushEventInfo(object):
     the returned object is able to determine if a given file
     was modified during the commits of the last push.
 
+    The is_modified() method returns True, if the file path,
+    given as input, leads to a file, that has been changed.
+
     Example API-call that delivers expected response:
      * :code:`GET {base_url}/api/v3/projects/{project_id}/events`
 
-    :param git_lab_response: A list of gitlab events obtained from a
-                             GitLab v3 API.
-    :param local_repo:       The path to the local git repo to work with.
+    :cvar str PUSH_DATE_KEY:        Key value of a GitLab API response for the
+                                    creation date of a push.
+    :ivar git.Repo repo:            A git.Repo used to handle the repository
+                                    containing the recipes.
+    :ivar git.Commit from_commit:   The first commit of the newest push to
+                                    the GitLab remote repository. Determined through
+                                    the get_latest_push() method
+                                    using the git_lab_api_response response.
+    :ivar git.Commit to_commit:     The last commit of the newest push to
+                                    the GitLab remote repository. Determined through
+                                    the get_latest_push() method
+                                    using the git_lab_api_response response.
+    :ivar dict changed_files:       Dictionary with full paths to
+                                    all changed files as keys and their change
+                                    types as values. Determined by the
+                                    get_changed_files() method.
+    :param list git_lab_response:   A list of gitlab events obtained from a
+                                    GitLab v3 API.
+    :param str local_repo:          The path to the local git repo to work with.
     """
 
     PUSH_DATE_KEY = "created_at"
@@ -56,8 +75,6 @@ class GitLabPushEventInfo(object):
             )
         _second_to_last_commits = self.from_commit.parents
 
-
-
     def is_modified_file(self, file_path: str) -> bool:
         """ Gives truth value for a files modification status.
 
@@ -65,7 +82,9 @@ class GitLabPushEventInfo(object):
         modified within commits pushed during the latest push,
         with the input file path.
 
-        :returns: Truth value for for a files modification status.
+        :param file_path:   Full path to the file, whose modification status
+                            is to be identified.
+        :returns:           Truth value for for a files modification status.
         """
         _is_modified = bool(
             file_path in [file_path for file_path in self.changed_files]
@@ -106,13 +125,22 @@ class GitLabPushEventInfo(object):
 
         if _diff_begin_commit.committed_datetime > _diff_end_commit.committed_datetime:
             raise ValueError("Begin commit happened before the end commit")
-        # Begin is the first commit
+
+        # If we compare changes between the beginning and the end, we will not get
+        # the files changed in the first commit itself.
+        # The first commit has to be set one commit back to get all changed files.
+
+        # If begin_commit is the first commit of the repository,
+        # the git.Commit.parents ivar will be empty.
+        # We hav to treat the first commit differently, since it has
+        # no previous commit to compare changes from beginning to end.
         if not _diff_begin_commit.parents:
-            # Since its the first commit files can only have been added.
+            # Since it is the first commit, files can only have been added.
             for file in _diff_begin_commit:
                 _changed_files[os.path.abspath(file)] = 'A'
-            # git.Commit.parents returns a tuple
-            # so we expect to work with a tuple.
+            # git.Commit.parents returns a tuple,
+            # possibly to handle merges.
+            # So we expect to work with a tuple from here.
             _diff_begin_commit = (_diff_begin_commit)
         else:
             # Set the beginning to a commit earlier.
@@ -124,8 +152,6 @@ class GitLabPushEventInfo(object):
                 _changed_files[os.path.abspath(file.a_path)] = file.change_type
 
         return _changed_files
-
-
 
     @classmethod
     def get_latest_push(cls, git_lab_response: list) -> Optional[dict]:
@@ -160,8 +186,6 @@ class GitLabPushEventInfo(object):
 
         # Connect Push event and date with the dates index.
         return git_lab_response[_latest_push_index]
-
-
 
     @classmethod
     def extract_push_data(cls, git_lab_response: list) -> list:

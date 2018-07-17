@@ -3,30 +3,27 @@
 
 """
 
-import unittest
 import os
-import types
 import re
+import types
+import unittest
 from subprocess import call
+
 from singularity_autobuild.autobuild_logger import get_stdout_logger
-from singularity_autobuild.singularity_builder import (
-    Builder
-)
-from singularity_autobuild.test.configurator import configure_test_recipe
-from singularity_autobuild.image_recipe_tools import (
+from singularity_autobuild.image_recipe_tools import (dependency_drill_down,
+                                                      dependency_resolver,
+                                                      get_collection_from_recipe_path,
+                                                      get_dependency_from_recipe,
     get_image_name_from_recipe,
+                                                      get_path_from_dependency,
     get_version_from_recipe,
-    get_collection_from_recipe_path,
     image_in_sregistry,
+                                                      image_pusher,
+                                                      is_own_dependency,
     recipe_finder,
-    image_pusher,
-    dependency_resolver,
-    dependency_drill_down,
-    get_dependency_from_recipe,
-    recipe_list_sanity_check,
-    get_path_from_dependency,
-    is_own_dependency
-)
+                                                      recipe_list_sanity_check)
+from singularity_autobuild.singularity_builder import Builder
+from singularity_autobuild.test.configurator import configure_test_recipe
 
 LOGGER = get_stdout_logger()
 

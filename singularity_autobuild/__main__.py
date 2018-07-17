@@ -16,21 +16,17 @@ Command line Options are:
 
 """
 
-import os
 import argparse
-from singularity_autobuild.singularity_builder import Builder
-from singularity_autobuild.image_recipe_tools import (
-    recipe_finder,
-    image_pusher,
-    image_in_sregistry,
-    dependency_resolver
-)
-from singularity_autobuild.gitlab_tools import (
-    GitLabPushEventInfo,
-    call_gitlab_events_api
-)
+import os
 
 from singularity_autobuild.autobuild_logger import get_stdout_logger
+from singularity_autobuild.gitlab_tools import (GitLabPushEventInfo,
+                                                call_gitlab_events_api)
+from singularity_autobuild.image_recipe_tools import (dependency_resolver,
+                                                      image_in_sregistry,
+                                                      image_pusher,
+                                                      recipe_finder)
+from singularity_autobuild.singularity_builder import Builder
 
 LOGGER = get_stdout_logger(name='main', level='INFO')
 

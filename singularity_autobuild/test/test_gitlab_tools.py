@@ -14,11 +14,9 @@ import unittest
 import git
 import iso8601
 
+from singularity_autobuild.gitlab_tools import (GitLabPushEventInfo,
+                                                call_gitlab_events_api)
 
-from singularity_autobuild.gitlab_tools import (
-    GitLabPushEventInfo,
-    call_gitlab_events_api
-)
 
 class TestGitLabPushEventInfo(unittest.TestCase):
     """ Test the the class capable of extracting information from gitlab api data.

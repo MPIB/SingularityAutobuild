@@ -9,10 +9,8 @@ from unittest.mock import patch
 from subprocess import call
 
 from singularity_autobuild.__main__ import arg_parser, main
-from singularity_autobuild.singularity_builder import (
-    Builder
-    )
 from singularity_autobuild.autobuild_logger import get_stdout_logger
+from singularity_autobuild.singularity_builder import Builder
 from singularity_autobuild.test.configurator import configure_test_recipe
 
 LOGGER = get_stdout_logger()

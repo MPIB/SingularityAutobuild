@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """ Unittests for the singularity_builder and the __main__ module.
 
 This project is developed by using test driven design.
@@ -8,10 +9,8 @@ from unittest.mock import patch
 from subprocess import call
 
 from singularity_autobuild.__main__ import arg_parser, main
-from singularity_autobuild.singularity_builder import (
-    Builder
-    )
 from singularity_autobuild.autobuild_logger import get_stdout_logger
+from singularity_autobuild.singularity_builder import Builder
 from singularity_autobuild.test.configurator import configure_test_recipe
 
 LOGGER = get_stdout_logger()
@@ -152,6 +151,7 @@ class TestMain(unittest.TestCase):
             search_folder=self.search_path,
             image_type='simg'
             )
+        _exit_code_image_exists = 0
         # Is the test image inside the sregistry?
         self.assertEqual(
             call([
@@ -159,7 +159,7 @@ class TestMain(unittest.TestCase):
                 'search',
                 "%s/%s:%s" % (COLLECTION, CONTAINER, VERSION)
                 ]),
-            0
+            _exit_code_image_exists
         )
         # Was the local image removed after the push?
         self.assertFalse(os.path.isfile(IMAGE_PATH))

@@ -1,11 +1,13 @@
+# -*- coding: utf-8 -*-
 """ Module for miscellaneous modules to work with sregistry. """
 
-import os
 import glob
+import os
 import re
 import subprocess
 from subprocess import call
 from typing import Generator
+
 from singularity_autobuild.autobuild_logger import get_stdout_logger
 
 LOGGER = get_stdout_logger(name=__name__, level='INFO')

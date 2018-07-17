@@ -1,6 +1,5 @@
+# -*- coding: utf-8 -*-
 """ Sets up a shared logger
-
-
 
 Informative logging, with stdout as target, is done with GitLabs ci pipeline in mind.
 Logging not expected to cause long output is logged to stdout to
@@ -9,6 +8,7 @@ show up inside a pipelines job log.
 
 import logging
 import sys
+
 
 def get_stdout_logger(name: str = None, level: str = None) -> logging.Logger:
     """ Sets up logger with a stream handler for stdout.

@@ -1,7 +1,8 @@
+# -*- coding: utf-8 -*-
 """ Unifies configuration for the unittest modules. """
 
-import os
 import configparser
+import os
 
 TEST_BASE_PATH = os.path.abspath(os.path.dirname(__file__))
 

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """ Unittests for the singularity_builder and the __main__ module.
 
 This project is developed by using test driven design.

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """Contains unittests for the gitlab_tools module.
 
 This project is developed by using test driven design.

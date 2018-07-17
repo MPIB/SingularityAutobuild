@@ -14,7 +14,6 @@ Command line Options are:
  --image_type   Image type, in the form of types suffix,
                 of the images to be build.
 
-scrolls
 """
 
 import os

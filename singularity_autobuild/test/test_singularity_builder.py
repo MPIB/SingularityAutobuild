@@ -151,6 +151,7 @@ class TestMain(unittest.TestCase):
             search_folder=self.search_path,
             image_type='simg'
             )
+        _exit_code_image_exists = 0
         # Is the test image inside the sregistry?
         self.assertEqual(
             call([
@@ -158,7 +159,7 @@ class TestMain(unittest.TestCase):
                 'search',
                 "%s/%s:%s" % (COLLECTION, CONTAINER, VERSION)
                 ]),
-            0
+            _exit_code_image_exists
         )
         # Was the local image removed after the push?
         self.assertFalse(os.path.isfile(IMAGE_PATH))

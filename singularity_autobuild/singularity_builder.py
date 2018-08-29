@@ -30,7 +30,7 @@ class Builder(object):
 
     # Directory to create log files, to pipe singularity build output into.
     SUBPROCESS_LOGDIR = '%s/%s' % (
-        os.path.dirname(os.path.abspath(__file__)),
+        "/tmp",
         'build_logs'
         )
 

@@ -3,14 +3,15 @@
 
 
 """
-import os
 import json
+import os
 import re
-from typing import  Optional
+from typing import Optional
 
 import git
 import iso8601
 import requests
+
 
 class GitLabPushEventInfo(object):
     """ Toolset and object to work with the GitLab API V3

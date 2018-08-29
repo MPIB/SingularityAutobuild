@@ -4,11 +4,10 @@
 import os
 from subprocess import call
 
-from singularity_autobuild.image_recipe_tools import (
-    get_version_from_recipe,
-    get_image_name_from_recipe,
-    get_collection_from_recipe_path
-    )
+from singularity_autobuild.image_recipe_tools import (get_collection_from_recipe_path,
+                                                      get_image_name_from_recipe,
+                                                      get_version_from_recipe)
+
 
 class Builder(object):
     """ Facilitate the building of a Singularity image from a recipe.

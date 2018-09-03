@@ -148,7 +148,7 @@ def main(
         try:
             _image_info = _builder.build()
         except OSError:
-            LOGGER.debug(
+            LOGGER.info(
                 "File %s could not be build by Singularity.",
                 recipe_path
                 )

@@ -18,6 +18,7 @@ Command line Options are:
 
 import argparse
 import os
+from textwrap import dedent
 
 from singularity_autobuild.autobuild_logger import get_stdout_logger
 from singularity_autobuild.gitlab_tools import (GitLabPushEventInfo,

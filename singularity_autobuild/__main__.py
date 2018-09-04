@@ -178,6 +178,11 @@ def _log_message(_image_info, _message_header):
     # We want all the infos to be in one block seprate from the rest of the log
     # Thats why we add a newline to the start.
     _message_header = os.linesep + _message_header
+    _image_info = {
+        key: _image_info[key]
+        for key
+        in ('collection_name', 'container_name', 'image_version')
+    }
     _template_message = _message_header + dedent(
         """
         collection: {collection_name}

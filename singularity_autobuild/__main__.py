@@ -36,15 +36,31 @@ def arg_parser() -> argparse.Namespace:
     :returns: Values of accepted command line arguments.
     """
     _parser = argparse.ArgumentParser(
-        description="""Find all recipes, build them and push all their images to an sregistry.
+        description=dedent(
+            """Find all recipes in a directory,
+            build them and push all their images to an sregistry.
         Recipes are identified by the suffix ".recipe".
-        The image name will be taken from the recipe name using everything from the first character till the first "." occurrence.
-        The version will be taken from the recipe name using everything from the first "." till the suffix ".recipe".
+            The image name will be taken from the recipe name
+            using everything from the first character till the first "." occurrence.
+            The version will be taken from the recipe name
+            using everything from the first "." till the suffix ".recipe".
         The collection name will be taken from the recipes parent folder.
         """
     )
-    _parser.add_argument('--path', '-p', type=str, help="Base path to search recipes.", required=True)
-    _parser.add_argument('--image_type', '-i', type=str, help="The type of image to be build.")
+    )
+    _parser.add_argument(
+        '--path',
+        '-p',
+        type=str,
+        help="Base path to search recipes.",
+        required=True
+    )
+    _parser.add_argument(
+        '--image_type',
+        '-i',
+        type=str,
+        help="The type of image to be build."
+    )
     return _parser.parse_args()
 
 def main(

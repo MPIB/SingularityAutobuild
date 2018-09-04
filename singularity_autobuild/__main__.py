@@ -76,15 +76,8 @@ def main(
                           :meth:`singularity_builder.Builder.build`.
     """
 
-
-    if search_folder is None:
-        # Params are not set via call, get command line params
-        _arguments = arg_parser()
-        search_folder = _arguments.path
-        if 'image_type' in _arguments:
-            image_type = _arguments.image_type
-
-    # Setup for Building
+    # Set up via GitLab environment variables
+    # These set through GitLab CI pipeline secret variables.
     try:
         _api_url = os.environ['GITLAB_API_STRING']
         _api_key = os.environ['GITLAB_API_TOKEN']
@@ -184,4 +177,12 @@ def _log_message(_image_info, _message_header):
 # Still testing for __name__ == __main__
 # to cleanly import this module during unit testing.
 if __name__ == "__main__":
-    main()
+    FUNCTION_ARGUMENTS = {}
+    CLI_ARGUMENTS = arg_parser()
+
+    if hasattr(CLI_ARGUMENTS, 'image_type'):
+        FUNCTION_ARGUMENTS['image_type'] = CLI_ARGUMENTS.image_type
+
+    FUNCTION_ARGUMENTS['search_folder'] = CLI_ARGUMENTS.path
+
+    main(**FUNCTION_ARGUMENTS)

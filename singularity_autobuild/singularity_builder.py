@@ -28,12 +28,19 @@ class Builder(object):
     """
 
     # Directory to create log files, to pipe singularity build output into.
-    SUBPROCESS_LOGDIR = '%s/%s' % (
+    subprocess_logdir = '{}/{}'.format(
         "/tmp",
         'build_logs'
         )
 
-    def __init__(self, recipe_path: str, image_type: str = 'simg'):
+    def __init__(
+            self,
+            recipe_path: str,
+            image_type: str = 'simg',
+            log_path: str = None
+    ):
+        if log_path:
+            self.subprocess_logdir = log_path
         self.recipe_path = recipe_path
         self.image_type = image_type
         self.build_status = False
@@ -48,8 +55,8 @@ class Builder(object):
         if it was defined as artifact in the pipeline defintion,
         even if nothing was build.
         """
-        if not os.path.exists(self.SUBPROCESS_LOGDIR):
-            os.makedirs(self.SUBPROCESS_LOGDIR)
+        if not os.path.exists(self.subprocess_logdir):
+            os.makedirs(self.subprocess_logdir)
 
     def build(self) -> dict:
         """ Calls singularity to build the image.
@@ -77,7 +84,7 @@ class Builder(object):
             return _image_info
 
         _subprocess_logpath = "%s/%s.%s.%s.log" % (
-            self.SUBPROCESS_LOGDIR,
+            self.subprocess_logdir,
             _image_info['collection_name'],
             _image_info['container_name'],
             _image_info['image_version']

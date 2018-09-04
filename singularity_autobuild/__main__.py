@@ -40,14 +40,14 @@ def arg_parser() -> argparse.Namespace:
         description=dedent(
             """Find all recipes in a directory,
             build them and push all their images to an sregistry.
-        Recipes are identified by the suffix ".recipe".
+            Recipes are identified by the suffix ".recipe".
             The image name will be taken from the recipe name
             using everything from the first character till the first "." occurrence.
             The version will be taken from the recipe name
             using everything from the first "." till the suffix ".recipe".
-        The collection name will be taken from the recipes parent folder.
-        """
-    )
+            The collection name will be taken from the recipes parent folder.
+            """
+            )
     )
     _parser.add_argument(
         '--path',
@@ -62,11 +62,18 @@ def arg_parser() -> argparse.Namespace:
         type=str,
         help="The type of image to be build."
     )
+    _parser.add_argument(
+        '--build_log_dir',
+        '-b',
+        type=str,
+        help="The directory, that should contain the build logs. Will be created if not existent."
+    )
     return _parser.parse_args()
 
 def main(
         search_folder: str = None,
-        image_type: str = 'simg'
+        image_type: str = 'simg',
+        build_log_folder_path: str = None
     ):
     """ Function to tie the functionality of this module together.
 
@@ -104,7 +111,11 @@ def main(
             recipe_file_paths=_recipe_list,
             recipe_base_path=search_folder
         ):
-        _builder = Builder(recipe_path=recipe_path, image_type=image_type)
+        _builder = Builder(
+            recipe_path=recipe_path,
+            image_type=image_type,
+            log_path=build_log_folder_path
+        )
         _image_info = _builder.image_info()
         # Does the image already exist in the sregistry?
         if image_in_sregistry(
@@ -135,7 +146,7 @@ def main(
                 "File %s could not be build by Singularity.",
                 recipe_path
                 )
-        # Load into sregistry if the recipe build into an image.
+        # Push to sregistry if the recipe was build into an image.
         if _builder.is_build():
             _pushed = image_pusher(
                 image_path=_image_info['image_full_path'],
@@ -154,7 +165,7 @@ def _log_recipe_is_unmodified(_image_info):
 
 def _log_is_building(_image_info):
     """ LOG message, for when an image starts building. """
-    _message_header= "Building:"
+    _message_header = "Building:"
     _log_message(_image_info, _message_header)
 
 def _log_remote_image_exists(_image_info):
@@ -180,6 +191,9 @@ def _log_message(_image_info, _message_header):
 if __name__ == "__main__":
     FUNCTION_ARGUMENTS = {}
     CLI_ARGUMENTS = arg_parser()
+
+    if hasattr(CLI_ARGUMENTS, 'build_log_dir'):
+        FUNCTION_ARGUMENTS['build_log_folder_path'] = CLI_ARGUMENTS.build_log_dir
 
     if hasattr(CLI_ARGUMENTS, 'image_type'):
         FUNCTION_ARGUMENTS['image_type'] = CLI_ARGUMENTS.image_type

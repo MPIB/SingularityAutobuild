@@ -102,17 +102,8 @@ def main(
                 version=_image_info['image_version'],
                 image=_image_info['container_name']
         ):
-            LOGGER.info(
-                """
-                Image already in SRegistry:
-                collection: %s
-                image:      %s
-                version:    %s
-                checking if its' recipe has changed.""",
-                _image_info['collection_name'],
-                _image_info['container_name'],
-                _image_info['image_version']
-                )
+            _log_remote_image_exists(_image_info)
+
             # Was the recipe file modified since last push?
             # This conditional together with the last one
             # is used to skip recipes, whose corresponding
@@ -120,30 +111,12 @@ def main(
             # Images whose recipes where changed since
             # the last pushed are however build and reuploaded.
             if not _file_checker.is_modified_file(recipe_path):
-                LOGGER.info(
-                    """
-                    Skipping Recipe not modified since last push:
-                    collection: %s
-                    image:      %s
-                    version:    %s""",
-                    _image_info['collection_name'],
-                    _image_info['container_name'],
-                    _image_info['image_version']
-                    )
+
+                _log_recipe_is_unmodified(_image_info)
                 # Skip build and upload.
                 continue
-        _builder = Builder(recipe_path=recipe_path, image_type=image_type)
-        _image_info = _builder.image_info()
-        LOGGER.info(
-            """
-            Building:
-            collection: %s
-            image:      %s
-            version:    %s""",
-            _image_info['collection_name'],
-            _image_info['container_name'],
-            _image_info['image_version']
-            )
+
+        _log_is_building(_image_info)
         # Actual building process.
         try:
             _image_info = _builder.build()
@@ -164,6 +137,33 @@ def main(
             if _pushed:
                 LOGGER.debug('Build and push was successful.')
 
+def _log_recipe_is_unmodified(_image_info):
+    """ Logger message, for when the recipe is unmodified. """
+    _message_header = "Skipping Recipe not modified since last push:"
+    _log_message(_image_info, _message_header)
+
+def _log_is_building(_image_info):
+    """ LOG message, for when an image starts building. """
+    _message_header= "Building:"
+    _log_message(_image_info, _message_header)
+
+def _log_remote_image_exists(_image_info):
+    """ LOG message, for when image already exists. """
+    _message_header = "Image already in SRegistry:"
+    _log_message(_image_info, _message_header)
+
+def _log_message(_image_info, _message_header):
+    """ Generic log with image infos. """
+    # We want all the infos to be in one block seprate from the rest of the log
+    # Thats why we add a newline to the start.
+    _message_header = os.linesep + _message_header
+    _bare_message = _message_header + dedent(
+        """
+        collection: {collection_name}
+        image:      {container_name}
+        version:    {image_version}"""
+    )
+    LOGGER.info(**_image_info)
 
 # Still testing for __name__ == __main__
 # to cleanly import this module during unit testing.

@@ -73,7 +73,7 @@ def arg_parser() -> argparse.Namespace:
 def main(
         search_folder: str = None,
         image_type: str = 'simg',
-        build_log_folder_path: str = None
+        build_log_dir: str = None
     ):
     """ Function to tie the functionality of this module together.
 
@@ -114,7 +114,7 @@ def main(
         _builder = Builder(
             recipe_path=recipe_path,
             image_type=image_type,
-            log_path=build_log_folder_path
+            log_path=build_log_dir
         )
         _image_info = _builder.image_info()
         # Does the image already exist in the sregistry?
@@ -178,13 +178,13 @@ def _log_message(_image_info, _message_header):
     # We want all the infos to be in one block seprate from the rest of the log
     # Thats why we add a newline to the start.
     _message_header = os.linesep + _message_header
-    _bare_message = _message_header + dedent(
+    _template_message = _message_header + dedent(
         """
         collection: {collection_name}
         image:      {container_name}
         version:    {image_version}"""
     )
-    LOGGER.info(**_image_info)
+    LOGGER.info(_template_message, **_image_info)
 
 # Still testing for __name__ == __main__
 # to cleanly import this module during unit testing.
@@ -193,7 +193,7 @@ if __name__ == "__main__":
     CLI_ARGUMENTS = arg_parser()
 
     if hasattr(CLI_ARGUMENTS, 'build_log_dir'):
-        FUNCTION_ARGUMENTS['build_log_folder_path'] = CLI_ARGUMENTS.build_log_dir
+        FUNCTION_ARGUMENTS['build_log_dir'] = CLI_ARGUMENTS.build_log_dir
 
     if hasattr(CLI_ARGUMENTS, 'image_type'):
         FUNCTION_ARGUMENTS['image_type'] = CLI_ARGUMENTS.image_type

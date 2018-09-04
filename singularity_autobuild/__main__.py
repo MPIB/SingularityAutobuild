@@ -43,8 +43,8 @@ def arg_parser() -> argparse.Namespace:
         The collection name will be taken from the recipes parent folder.
         """
     )
-    _parser.add_argument('--path', type=str, help="Base path to search recipes.", required=True)
-    _parser.add_argument('--image_type', type=str, help="The type of image to be build")
+    _parser.add_argument('--path', '-p', type=str, help="Base path to search recipes.", required=True)
+    _parser.add_argument('--image_type', '-i', type=str, help="The type of image to be build.")
     return _parser.parse_args()
 
 def main(

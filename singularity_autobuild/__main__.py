@@ -189,7 +189,8 @@ def _log_message(_image_info, _message_header):
         image:      {container_name}
         version:    {image_version}"""
     )
-    LOGGER.info(_template_message, **_image_info)
+    _log_message = _template_message.format(**_image_info)
+    LOGGER.info(_log_message)
 
 # Still testing for __name__ == __main__
 # to cleanly import this module during unit testing.

@@ -71,7 +71,7 @@ def arg_parser() -> argparse.Namespace:
     return _parser.parse_args()
 
 def main(
-        search_folder: str = None,
+        search_folder: str,
         image_type: str = 'simg',
         build_log_dir: str = None
     ):
@@ -192,18 +192,23 @@ def _log_message(_image_info, _message_header):
     _log_message = _template_message.format(**_image_info)
     LOGGER.info(_log_message)
 
+def entrypoint_run():
+    """ target for setup.py entrypoint. """
+    _function_arguments = {}
+    _cli_arguments = arg_parser()
+
+    if _cli_arguments.build_log_dir:
+        _function_arguments['build_log_dir'] = _cli_arguments.build_log_dir
+
+    if _cli_arguments.image_type:
+        _function_arguments['image_type'] = _cli_arguments.image_type
+
+    _function_arguments['search_folder'] = _cli_arguments.path
+
+    main(**_function_arguments)
+
 # Still testing for __name__ == __main__
 # to cleanly import this module during unit testing.
 if __name__ == "__main__":
-    FUNCTION_ARGUMENTS = {}
-    CLI_ARGUMENTS = arg_parser()
-
-    if CLI_ARGUMENTS.build_log_dir:
-        FUNCTION_ARGUMENTS['build_log_dir'] = CLI_ARGUMENTS.build_log_dir
-
-    if CLI_ARGUMENTS.image_type:
-        FUNCTION_ARGUMENTS['image_type'] = CLI_ARGUMENTS.image_type
-
-    FUNCTION_ARGUMENTS['search_folder'] = CLI_ARGUMENTS.path
-
-    main(**FUNCTION_ARGUMENTS)
+    entrypoint_run()
+    

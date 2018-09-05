@@ -198,10 +198,10 @@ if __name__ == "__main__":
     FUNCTION_ARGUMENTS = {}
     CLI_ARGUMENTS = arg_parser()
 
-    if hasattr(CLI_ARGUMENTS, 'build_log_dir'):
+    if CLI_ARGUMENTS.build_log_dir:
         FUNCTION_ARGUMENTS['build_log_dir'] = CLI_ARGUMENTS.build_log_dir
 
-    if hasattr(CLI_ARGUMENTS, 'image_type'):
+    if CLI_ARGUMENTS.image_type:
         FUNCTION_ARGUMENTS['image_type'] = CLI_ARGUMENTS.image_type
 
     FUNCTION_ARGUMENTS['search_folder'] = CLI_ARGUMENTS.path

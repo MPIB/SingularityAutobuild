@@ -25,13 +25,13 @@ class Builder(object):
 
     :param recipe_path: The full path to the singularity recipe
     :param image_type:  The image type to be produces. identified by used suffix.
+    :param log_path:    Path to where the build_logs resides. Will create the path,
+                        if it does not already exist. Will create a folder named
+                        build_logs at the location.
+                        The directory will contain a logfile for every building process run.
     """
 
-    # Directory to create log files, to pipe singularity build output into.
-    subprocess_logdir = '{}/{}'.format(
-        "/tmp",
-        'build_logs'
-        )
+    BUILD_LOGS_FOLDER_NAME = 'build_logs'
 
     def __init__(
             self,
@@ -40,7 +40,9 @@ class Builder(object):
             log_path: str = None
     ):
         if log_path:
-            self.subprocess_logdir = log_path
+            self.subprocess_logdir = '{}/{}'.format(log_path, self.BUILD_LOGS_FOLDER_NAME)
+        else:
+            self.subprocess_logdir = '{}/{}'.format("/tmp", self.BUILD_LOGS_FOLDER_NAME)
         self.recipe_path = recipe_path
         self.image_type = image_type
         self.build_status = False

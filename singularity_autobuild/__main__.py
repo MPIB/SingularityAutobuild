@@ -193,7 +193,10 @@ def _log_message(_image_info, _message_header):
     LOGGER.info(_log_message)
 
 def entrypoint_run():
-    """ target for setup.py entrypoint. """
+    """ Target for setup.py entrypoint.
+    
+    Gathers the command line arguments and calls main with the values set.
+    """
     _function_arguments = {}
     _cli_arguments = arg_parser()
 

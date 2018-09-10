@@ -25,15 +25,24 @@ class Builder(object):
 
     :param recipe_path: The full path to the singularity recipe
     :param image_type:  The image type to be produces. identified by used suffix.
+    :param log_path:    Path to where the build_logs resides. Will create the path,
+                        if it does not already exist. Will create a folder named
+                        build_logs at the location.
+                        The directory will contain a logfile for every building process run.
     """
 
-    # Directory to create log files, to pipe singularity build output into.
-    SUBPROCESS_LOGDIR = '%s/%s' % (
-        "/tmp",
-        'build_logs'
-        )
+    BUILD_LOGS_FOLDER_NAME = 'build_logs'
 
-    def __init__(self, recipe_path: str, image_type: str = 'simg'):
+    def __init__(
+            self,
+            recipe_path: str,
+            image_type: str = 'simg',
+            log_path: str = None
+    ):
+        if log_path:
+            self.subprocess_logdir = '{}/{}'.format(log_path, self.BUILD_LOGS_FOLDER_NAME)
+        else:
+            self.subprocess_logdir = '{}/{}'.format("/tmp", self.BUILD_LOGS_FOLDER_NAME)
         self.recipe_path = recipe_path
         self.image_type = image_type
         self.build_status = False
@@ -48,8 +57,8 @@ class Builder(object):
         if it was defined as artifact in the pipeline defintion,
         even if nothing was build.
         """
-        if not os.path.exists(self.SUBPROCESS_LOGDIR):
-            os.makedirs(self.SUBPROCESS_LOGDIR)
+        if not os.path.exists(self.subprocess_logdir):
+            os.makedirs(self.subprocess_logdir)
 
     def build(self) -> dict:
         """ Calls singularity to build the image.
@@ -77,7 +86,7 @@ class Builder(object):
             return _image_info
 
         _subprocess_logpath = "%s/%s.%s.%s.log" % (
-            self.SUBPROCESS_LOGDIR,
+            self.subprocess_logdir,
             _image_info['collection_name'],
             _image_info['container_name'],
             _image_info['image_version']

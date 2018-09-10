@@ -15,7 +15,7 @@ setup(
     },
     entry_points={
         'console_scripts': [
-            'singularity_autobuild = singularity_autobuild.__main__:main'
+            'singularity_autobuild = singularity_autobuild.__main__:entrypoint_run'
         ]
     },
     url='http://github.com/MPIB/SingularityAutobuild',

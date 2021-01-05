@@ -31,7 +31,7 @@ setup(
         # Used to convert gitlabs date strings into date objects.
         "iso8601==0.1.12",
         # Needed to get data from the gitlab api.
-        "requests==2.20.0",
+        "requests~=2.20",
         # Needed for python type hints.
         "typing==3.6.4"
     ]

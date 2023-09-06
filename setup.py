@@ -27,7 +27,7 @@ setup(
     long_description=open('README.rst').read(),
     install_requires=[
         # Needed to work with the repository, that contains the recipes.
-        "GitPython==2.1.9",
+        "GitPython==3.1.34",
         # Used to convert gitlabs date strings into date objects.
         "iso8601==0.1.12",
         # Needed to get data from the gitlab api.
